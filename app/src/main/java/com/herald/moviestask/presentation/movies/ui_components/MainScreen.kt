@@ -34,7 +34,6 @@ import coil.compose.AsyncImage
 import com.herald.moviestask.common.Constants
 import com.herald.moviestask.domain.remote.models.MoviesModel
 import com.herald.moviestask.presentation.components.LoadingBar
-import com.herald.moviestask.presentation.components.Screens
 import com.herald.moviestask.presentation.movies.MoviesEvents
 import com.herald.moviestask.presentation.movies.MoviesIntents
 import com.herald.moviestask.presentation.movies.MoviesViewModel
@@ -87,7 +86,7 @@ fun MainScreen(navController: NavHostController, moviesViewModel: MoviesViewMode
                         }
                     }
                     is MoviesEvents.NavigateToMovieDetails -> {
-                        navController.navigate(Screens.DetailsScreen)
+                        navController.navigate(res.movie)
                     }
                     is MoviesEvents.Retry -> movies.retry()
                 }
