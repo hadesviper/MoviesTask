@@ -8,7 +8,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
 @Composable
-fun LoadingBar() {
+fun LoadingBar(visible: Boolean) {
+    if (!visible) return
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,

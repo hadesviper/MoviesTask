@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 data class MoviesModel(
     val page: Int,
-    val results: List<MovieData>,
+    val movieData: List<MovieData>,
     val totalPages: Int,
     val totalResults: Int
 ) {

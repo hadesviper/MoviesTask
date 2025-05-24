@@ -1,6 +1,5 @@
 package com.herald.moviestask.presentation.movies.ui_components
 
-import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -8,8 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -22,15 +21,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.paging.LoadState
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import com.herald.moviestask.common.Constants
 import com.herald.moviestask.domain.remote.models.MoviesModel
@@ -44,10 +43,9 @@ import kotlinx.coroutines.flow.collectLatest
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(navController: NavHostController, moviesViewModel: MoviesViewModel) {
-    val state by moviesViewModel.state.collectAsState()
+    val movies = moviesViewModel.movies.collectAsLazyPagingItems()
     val listState = rememberLazyGridState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
     val onMovieClick: (MoviesModel.MovieData) -> Unit = remember { { moviesViewModel.handleIntents(MoviesIntents.OpenMovieDetails(it)) } }
 
     Scaffold(snackbarHost = {
@@ -57,45 +55,41 @@ fun MainScreen(navController: NavHostController, moviesViewModel: MoviesViewMode
             Text("Movies App")
         })
     }) { innerPadding ->
-        when {
-            state.isLoading -> {
-                LoadingBar()
-            }
-        }
 
         Column(modifier = Modifier.padding(innerPadding)) {
-            state.movies?.let { results ->
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2), state = listState
-                ) {
-                    items(results,
-                        key = { it.id },
-                        contentType = { MoviesModel.MovieData::class }) {
+
+            LoadingBar(movies.loadState.refresh is LoadState.Loading)
+
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2), state = listState
+            ) {
+                items(movies.itemCount,
+                    key = movies.itemKey {it.id},
+                    contentType = { MoviesModel.MovieData::class })
+                { index ->
+                    movies[index]?.let {
                         MovieItem(it) { movie ->
                             onMovieClick(movie)
                         }
                     }
                 }
+                item(span = { GridItemSpan(2) }) {
+                    LoadingBar(movies.loadState.append is LoadState.Loading)
+                }
             }
-
         }
         LaunchedEffect(Unit) {
             moviesViewModel.events.collectLatest { res ->
                 when (res) {
                     is MoviesEvents.ErrorOccurred -> {
-                        val result = snackbarHostState.showSnackbar(
-                            "error",
-                            actionLabel = "retry",
-                        )
-                        when (result) {
-                            SnackbarResult.Dismissed -> TODO()
-                            SnackbarResult.ActionPerformed -> moviesViewModel.handleIntents(MoviesIntents.FetchFirstMovies(1))
+                        showSnackbar(snackbarHostState, res.error) {
+                            moviesViewModel.handleIntents(MoviesIntents.PagerRetry)
                         }
                     }
                     is MoviesEvents.NavigateToMovieDetails -> {
-                        Toast.makeText(context, res.movie.title, Toast.LENGTH_SHORT).show()
                         navController.navigate(Screens.DetailsScreen)
                     }
+                    is MoviesEvents.Retry -> movies.retry()
                 }
             }
         }
@@ -106,15 +100,12 @@ fun MainScreen(navController: NavHostController, moviesViewModel: MoviesViewMode
 @Composable
 private fun MovieItem(movie: MoviesModel.MovieData, onMovieClick: (MoviesModel.MovieData) -> Unit) {
     Card(
-        modifier = Modifier.padding(5.dp),
-        shape = RoundedCornerShape(5)
+        modifier = Modifier.padding(5.dp), shape = RoundedCornerShape(5)
     ) {
-        Column(
-            modifier = Modifier
-                .clickable { onMovieClick(movie) }
-                .padding(10.dp),
-            verticalArrangement = Arrangement.spacedBy(5.dp)
-        ) {
+        Column(modifier = Modifier
+            .clickable { onMovieClick(movie) }
+            .padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(5.dp)) {
             AsyncImage(
                 "${Constants.BASE_IMAGE_URL}${movie.posterPath}",
                 "",
@@ -124,5 +115,18 @@ private fun MovieItem(movie: MoviesModel.MovieData, onMovieClick: (MoviesModel.M
             Text(movie.title, minLines = 2, maxLines = 2, overflow = TextOverflow.Clip)
             Text("Date: ${movie.releaseDate}", maxLines = 1)
         }
+    }
+}
+
+private suspend fun showSnackbar(
+    snackbarHostState: SnackbarHostState, message: String = "error", actionPerformed: () -> Unit
+) {
+    val result = snackbarHostState.showSnackbar(
+        message = message,
+        actionLabel = "Retry",
+    )
+    when (result) {
+        SnackbarResult.Dismissed -> Unit
+        SnackbarResult.ActionPerformed -> actionPerformed()
     }
 }
