@@ -48,7 +48,7 @@ data class MoviesDTO(
     fun toMovies():MoviesModel{
         return MoviesModel(
             page = page,
-            results = results.map {
+            movieData = results.map {
                 MoviesModel.MovieData(
                     backdropPath = it.backdropPath,
                     id = it.id,
