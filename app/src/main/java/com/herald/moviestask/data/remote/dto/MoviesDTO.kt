@@ -53,7 +53,7 @@ data class MoviesDTO(
                 MoviesModel.MovieItem(
                     id = it.id,
                     posterPath = it.posterPath,
-                    releaseDate = it.releaseDate.split("-")[0],
+                    releaseDate = it.releaseDate.split("-")[0].ifEmpty { "----" },
                     title = it.title,
                     voteAverage = String.format(Locale.ENGLISH,"%.1f",it.voteAverage)
                 )

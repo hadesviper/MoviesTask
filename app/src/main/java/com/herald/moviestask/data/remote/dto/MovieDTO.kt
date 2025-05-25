@@ -39,7 +39,7 @@ data class MovieDTO(
     @SerializedName("production_countries")
     val productionCountries: List<ProductionCountry?>? = listOf(),
     @SerializedName("release_date")
-    val releaseDate: String? = "",
+    val releaseDate: String,
     @SerializedName("revenue")
     val revenue: Int? = 0,
     @SerializedName("runtime")
@@ -128,7 +128,7 @@ data class MovieDTO(
             genres = genres?.map { it?.name ?: "" } ?: emptyList(),
             id = id,
             overview = overview ?: "",
-            releaseDate = releaseDate?.split("-")?.get(0) ?: "",
+            releaseDate = releaseDate.split("-")[0].ifEmpty { "----" },
             runtime = runtime ?: 0,
             tagline = tagline ?: "",
             title = title ?: "",

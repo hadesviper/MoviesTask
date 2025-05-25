@@ -13,15 +13,27 @@ interface RetroService {
 
     @GET("movie/popular")
     suspend fun getPopularMovies(
-        @Query("page") page:Int,
+        @Query("page") page: Int,
+        @Query("include_adult") includeAdult: Boolean = false,
         @Header("accept") accept: String = "application/json",
         @Header("Authorization") authorization: String = Constants.MY_KEY,
         @Header("Cache-Control") cacheControl: String = "public, max-age=$CACHE_DURATION"
-    ) : MoviesDTO
+    ): MoviesDTO
+
+    @GET("search/movie")
+    suspend fun searchMovies(
+        @Query("page") page: Int,
+        @Query("query") query: String,
+        @Query("include_adult") includeAdult: Boolean = false,
+        @Header("accept") accept: String = "application/json",
+        @Header("Authorization") authorization: String = Constants.MY_KEY,
+        @Header("Cache-Control") cacheControl: String = "public, max-age=$CACHE_DURATION"
+    ): MoviesDTO
 
     @GET("movie/{movieID}?append_to_response=videos")
     suspend fun getMovieDetails(
-        @Path("movieID") movieID:Int,
+        @Path("movieID") movieID: Int,
+        @Query("include_adult") includeAdult: Boolean = false,
         @Header("accept") accept: String = "application/json",
         @Header("Authorization") authorization: String = Constants.MY_KEY,
         @Header("Cache-Control") cacheControl: String = "public, max-age=$CACHE_DURATION"

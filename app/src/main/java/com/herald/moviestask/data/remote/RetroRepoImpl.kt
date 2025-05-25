@@ -4,6 +4,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.herald.moviestask.data.remote.pagingsource.MoviePagingSource
+import com.herald.moviestask.data.remote.pagingsource.SearchingPagingSource
 import com.herald.moviestask.domain.remote.models.MovieModel
 import com.herald.moviestask.domain.remote.models.MoviesModel
 import com.herald.moviestask.domain.remote.repository.RetroRepository
@@ -21,6 +22,17 @@ class RetroRepoImpl @Inject constructor(
             ),
             pagingSourceFactory = {
                 MoviePagingSource(retroService, onError)
+            }
+        ).flow
+    }
+
+    override fun searchMovies(query: String,onError: (Exception) -> Unit): Flow<PagingData<MoviesModel.MovieItem>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = 20,
+            ),
+            pagingSourceFactory = {
+                SearchingPagingSource(retroService,query, onError)
             }
         ).flow
     }

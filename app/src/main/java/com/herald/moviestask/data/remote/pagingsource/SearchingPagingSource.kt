@@ -6,15 +6,16 @@ import androidx.paging.PagingState
 import com.herald.moviestask.data.remote.RetroService
 import com.herald.moviestask.domain.remote.models.MoviesModel
 
-class MoviePagingSource(
+class SearchingPagingSource(
     private val retroService: RetroService,
+    private val query: String,
     private val onError: (Exception) -> Unit
 ) : PagingSource<Int, MoviesModel.MovieItem>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MoviesModel.MovieItem> {
         val page = params.key ?: 1
         return try {
-            val response = retroService.getPopularMovies(page)
+            val response = retroService.searchMovies(page,query)
             val movieData = response.toMovies().movieListItem
             Log.i("TAG", "load: items page: $page ")
             LoadResult.Page(

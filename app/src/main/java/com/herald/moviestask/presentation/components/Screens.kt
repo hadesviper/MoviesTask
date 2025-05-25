@@ -7,4 +7,6 @@ sealed interface Screens {
     object MainScreen
     @Serializable
     data class DetailsScreen(val id: Int)
+    @Serializable
+    object SearchScreen
 }

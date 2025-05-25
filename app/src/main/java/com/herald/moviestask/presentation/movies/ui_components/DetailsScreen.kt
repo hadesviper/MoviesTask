@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -39,12 +40,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.herald.moviestask.R
 import com.herald.moviestask.common.Constants
 import com.herald.moviestask.common.Utils.showSnackbar
 import com.herald.moviestask.domain.remote.models.MovieModel
@@ -66,16 +69,21 @@ fun DetailsScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.fillMaxSize(),
-        topBar = { DetailsTopAppBar(navController) }
+        topBar = { DetailsTopAppBar { moviesViewModel.handleIntents(MoviesIntents.NavigateBack) } }
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
+
             LoadingBar(states.isLoading)
+
             states.movie?.let { movie ->
+                val imageURL = Constants.BASE_BACK_IMAGE_URL+movie.backdropPath
                 AsyncImage(
-                    Constants.BASE_BACK_IMAGE_URL+movie.backdropPath,
+                    imageURL,
                     "Background Image",
                     contentScale = ContentScale.FillWidth,
-                    modifier = Modifier.fillMaxWidth()
+                    placeholder = painterResource(R.drawable.image_loading),
+                    error = painterResource(R.drawable.no_image),
+                    modifier = Modifier.fillMaxWidth().height(200.dp)
                 )
                 MovieDetails(movie)
             }
@@ -90,6 +98,7 @@ fun DetailsScreen(
                         moviesViewModel.handleIntents(MoviesIntents.LoadMovieDetails(movieID))
                     }
                 }
+                is MoviesEvents.NavigateBack -> { navController.navigateUp() }
                 else -> Unit
             }
         }
@@ -98,12 +107,12 @@ fun DetailsScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DetailsTopAppBar(navController: NavController) {
+private fun DetailsTopAppBar(goBack: ()->Unit) {
     TopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         title = { Text("Movie Details") },
         navigationIcon = {
-            IconButton(onClick = { navController.popBackStack() })
+            IconButton(onClick = { goBack()})
             {
                 Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Go Back")
             }
@@ -179,7 +188,7 @@ private fun BasicDataRow(movie: MovieModel) {
         TextWithIcon(
             modifier = Modifier.align(Alignment.CenterVertically),
             Icons.Filled.CheckCircle,
-            "120 mins",
+            "${movie.runtime.toString().ifEmpty { "-" }} mins",
             fontSize,
             iconSize
         )
