@@ -14,12 +14,13 @@ class MoviePagingSource(
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MoviesModel.MovieItem> {
         val page = params.key ?: 1
         return try {
-            val movieData = retroService.getPopularMovies(page).toMovies().movieListItem
+            val response = retroService.getPopularMovies(page)
+            val movieData = response.toMovies().movieListItem
             Log.i("TAG", "load: items page: $page ")
             LoadResult.Page(
                 data = movieData,
                 prevKey = if (page == 1) null else page - 1,
-                nextKey = if (movieData.isEmpty()) null else page + 1
+                nextKey = if (page < response.totalPages) page + 1 else null
             )
         } catch (e: Exception) {
             onError(e)
