@@ -9,7 +9,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.herald.moviestask.domain.remote.models.MoviesModel
 import com.herald.moviestask.presentation.components.Screens
 import com.herald.moviestask.presentation.movies.MoviesViewModel
 import com.herald.moviestask.presentation.movies.ui_components.DetailsScreen
@@ -31,9 +30,9 @@ class MainActivity : ComponentActivity() {
                     startDestination = Screens.MainScreen
                 ){
                     composable<Screens.MainScreen> { MainScreen(navController, viewModel) }
-                    composable<MoviesModel.MovieData> {
-                        val movie = it.toRoute<MoviesModel.MovieData>()
-                        DetailsScreen(navController,movie)
+                    composable<Screens.DetailsScreen> {
+                        val movieID = it.toRoute<Screens.DetailsScreen>()
+                        DetailsScreen(navController,movieID.id,viewModel)
                     }
                 }
             }

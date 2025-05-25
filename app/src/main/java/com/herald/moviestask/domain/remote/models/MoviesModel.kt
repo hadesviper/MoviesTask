@@ -1,23 +1,14 @@
 package com.herald.moviestask.domain.remote.models
 
-import kotlinx.serialization.Serializable
-
 data class MoviesModel(
     val page: Int,
-    val movieData: List<MovieData>,
-    val totalPages: Int,
-    val totalResults: Int
+    val movieListItem: List<MovieItem>,
 ) {
-    @Serializable
-    data class MovieData(
-        val backdropPath: String?,
+    data class MovieItem(
         val id: Int,
-        val overview: String,
-        val popularity: Double,
         val posterPath: String?,
         val releaseDate: String,
         val title: String,
-        val video: Boolean,
         val voteAverage: String
     )
 }

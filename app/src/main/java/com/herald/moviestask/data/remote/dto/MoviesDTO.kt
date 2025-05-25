@@ -1,4 +1,4 @@
-package com.herald.moviestask.data.source.remote.dto
+package com.herald.moviestask.data.remote.dto
 
 
 import com.google.gson.annotations.SerializedName
@@ -49,21 +49,15 @@ data class MoviesDTO(
     fun toMovies():MoviesModel{
         return MoviesModel(
             page = page,
-            movieData = results.map {
-                MoviesModel.MovieData(
-                    backdropPath = it.backdropPath,
+            movieListItem = results.map {
+                MoviesModel.MovieItem(
                     id = it.id,
-                    overview = it.overview,
-                    popularity = it.popularity,
                     posterPath = it.posterPath,
                     releaseDate = it.releaseDate.split("-")[0],
                     title = it.title,
-                    video = it.video,
                     voteAverage = String.format(Locale.ENGLISH,"%.1f",it.voteAverage)
                 )
             },
-            totalPages = totalPages,
-            totalResults = totalResults
         )
     }
 }

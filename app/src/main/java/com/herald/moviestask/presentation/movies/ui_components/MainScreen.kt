@@ -16,7 +16,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -29,11 +28,12 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import com.herald.moviestask.common.Constants
+import com.herald.moviestask.common.Utils.showSnackbar
 import com.herald.moviestask.domain.remote.models.MoviesModel
 import com.herald.moviestask.presentation.components.LoadingBar
+import com.herald.moviestask.presentation.components.Screens
 import com.herald.moviestask.presentation.movies.MoviesEvents
 import com.herald.moviestask.presentation.movies.MoviesIntents
 import com.herald.moviestask.presentation.movies.MoviesViewModel
@@ -45,7 +45,7 @@ fun MainScreen(navController: NavHostController, moviesViewModel: MoviesViewMode
     val movies = moviesViewModel.movies.collectAsLazyPagingItems()
     val listState = rememberLazyGridState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val onMovieClick: (MoviesModel.MovieData) -> Unit = remember { { moviesViewModel.handleIntents(MoviesIntents.OpenMovieDetails(it)) } }
+    val onMovieClick: (MoviesModel.MovieItem) -> Unit = remember { { moviesViewModel.handleIntents(MoviesIntents.OpenMovieDetails(it.id)) } }
 
     Scaffold(snackbarHost = {
         SnackbarHost(snackbarHostState)
@@ -62,9 +62,7 @@ fun MainScreen(navController: NavHostController, moviesViewModel: MoviesViewMode
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2), state = listState
             ) {
-                items(movies.itemCount,
-                    key = movies.itemKey {it.id},
-                    contentType = { MoviesModel.MovieData::class })
+                items(movies.itemCount, contentType = { MoviesModel.MovieItem::class })
                 { index ->
                     movies[index]?.let {
                         MovieItem(it) { movie ->
@@ -82,12 +80,10 @@ fun MainScreen(navController: NavHostController, moviesViewModel: MoviesViewMode
                 when (res) {
                     is MoviesEvents.ErrorOccurred -> {
                         showSnackbar(snackbarHostState, res.error) {
-                            moviesViewModel.handleIntents(MoviesIntents.PagerRetry)
+                            moviesViewModel.handleIntents(MoviesIntents.RetryLoadingData)
                         }
                     }
-                    is MoviesEvents.NavigateToMovieDetails -> {
-                        navController.navigate(res.movie)
-                    }
+                    is MoviesEvents.NavigateToMovieDetails -> navController.navigate(Screens.DetailsScreen(res.id))
                     is MoviesEvents.Retry -> movies.retry()
                 }
             }
@@ -97,7 +93,7 @@ fun MainScreen(navController: NavHostController, moviesViewModel: MoviesViewMode
 
 
 @Composable
-private fun MovieItem(movie: MoviesModel.MovieData, onMovieClick: (MoviesModel.MovieData) -> Unit) {
+private fun MovieItem(movie: MoviesModel.MovieItem, onMovieClick: (MoviesModel.MovieItem) -> Unit) {
     Card(
         modifier = Modifier.padding(5.dp), shape = RoundedCornerShape(5)
     ) {
@@ -114,18 +110,5 @@ private fun MovieItem(movie: MoviesModel.MovieData, onMovieClick: (MoviesModel.M
             Text(movie.title, minLines = 2, maxLines = 2, overflow = TextOverflow.Clip)
             Text("Date: ${movie.releaseDate}", maxLines = 1)
         }
-    }
-}
-
-private suspend fun showSnackbar(
-    snackbarHostState: SnackbarHostState, message: String = "error", actionPerformed: () -> Unit
-) {
-    val result = snackbarHostState.showSnackbar(
-        message = message,
-        actionLabel = "Retry",
-    )
-    when (result) {
-        SnackbarResult.Dismissed -> Unit
-        SnackbarResult.ActionPerformed -> actionPerformed()
     }
 }
