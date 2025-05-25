@@ -9,7 +9,7 @@ import javax.inject.Inject
 class FetchPagedMoviesUseCase @Inject constructor(
     private val retroRepository: RetroRepository
 ) {
-    operator fun invoke(onError: (Exception) -> Unit): Flow<PagingData<MoviesModel.MovieData>> {
+    operator fun invoke(onError: (Exception) -> Unit): Flow<PagingData<MoviesModel.MovieItem>> {
         return retroRepository.getPopularMovies(onError)
     }
 }

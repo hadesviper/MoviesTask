@@ -1,8 +1,7 @@
 package com.herald.moviestask.presentation.movies
 
-import com.herald.moviestask.domain.remote.models.MoviesModel
-
 sealed interface MoviesIntents {
-    data class OpenMovieDetails(val movie: MoviesModel.MovieData) : MoviesIntents
-    data object PagerRetry : MoviesIntents
+    data class OpenMovieDetails(val id: Int) : MoviesIntents
+    data class LoadMovieDetails(val id: Int) : MoviesIntents
+    data object RetryLoadingData : MoviesIntents
 }

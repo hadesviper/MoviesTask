@@ -4,6 +4,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.herald.moviestask.data.remote.pagingsource.MoviePagingSource
+import com.herald.moviestask.domain.remote.models.MovieModel
 import com.herald.moviestask.domain.remote.models.MoviesModel
 import com.herald.moviestask.domain.remote.repository.RetroRepository
 import kotlinx.coroutines.flow.Flow
@@ -13,7 +14,7 @@ class RetroRepoImpl @Inject constructor(
     private val retroService: RetroService
 ): RetroRepository {
 
-    override fun getPopularMovies(onError: (Exception) -> Unit): Flow<PagingData<MoviesModel.MovieData>> {
+    override fun getPopularMovies(onError: (Exception) -> Unit): Flow<PagingData<MoviesModel.MovieItem>> {
         return Pager(
             config = PagingConfig(
                 pageSize = 20,
@@ -22,5 +23,9 @@ class RetroRepoImpl @Inject constructor(
                 MoviePagingSource(retroService, onError)
             }
         ).flow
+    }
+
+    override suspend fun getMovieDetails(id: Int): MovieModel {
+        return retroService.getMovieDetails(id).toMovieModel()
     }
 }

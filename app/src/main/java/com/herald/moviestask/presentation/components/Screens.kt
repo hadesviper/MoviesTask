@@ -6,5 +6,5 @@ sealed interface Screens {
     @Serializable
     object MainScreen
     @Serializable
-    object DetailsScreen
+    data class DetailsScreen(val id: Int)
 }

@@ -9,12 +9,12 @@ import com.herald.moviestask.domain.remote.models.MoviesModel
 class MoviePagingSource(
     private val retroService: RetroService,
     private val onError: (Exception) -> Unit
-) : PagingSource<Int, MoviesModel.MovieData>() {
+) : PagingSource<Int, MoviesModel.MovieItem>() {
 
-    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MoviesModel.MovieData> {
+    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MoviesModel.MovieItem> {
         val page = params.key ?: 1
         return try {
-            val movieData = retroService.getPopularMovies(page).toMovies().movieData
+            val movieData = retroService.getPopularMovies(page).toMovies().movieListItem
             Log.i("TAG", "load: items page: $page ")
             LoadResult.Page(
                 data = movieData,
@@ -27,7 +27,7 @@ class MoviePagingSource(
         }
     }
 
-    override fun getRefreshKey(state: PagingState<Int, MoviesModel.MovieData>): Int? {
+    override fun getRefreshKey(state: PagingState<Int, MoviesModel.MovieItem>): Int? {
         return state.anchorPosition?.let { anchor ->
             val page = state.closestPageToPosition(anchor)
             page?.prevKey?.plus(1) ?: page?.nextKey?.minus(1)
