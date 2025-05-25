@@ -3,9 +3,10 @@ package com.herald.moviestask.domain.remote.usecases
 import com.herald.moviestask.domain.remote.repository.RetroRepository
 import javax.inject.Inject
 
-class FetchPagedMoviesUseCase @Inject constructor(
+class FetchMovieSearchUseCase @Inject constructor(
     private val retroRepository: RetroRepository
 ) {
-    operator fun invoke(onError: (Exception) -> Unit) =
-        retroRepository.getPopularMovies(onError)
+    operator fun invoke(query: String, onError: (Exception) -> Unit) =
+        retroRepository.searchMovies(query, onError)
+
 }

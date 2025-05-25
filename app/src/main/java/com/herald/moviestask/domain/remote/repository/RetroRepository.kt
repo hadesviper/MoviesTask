@@ -7,5 +7,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface RetroRepository {
     fun getPopularMovies(onError: (Exception) -> Unit): Flow<PagingData<MoviesModel.MovieItem>>
+    fun searchMovies(query: String, onError: (Exception) -> Unit): Flow<PagingData<MoviesModel.MovieItem>>
     suspend fun getMovieDetails(id: Int): MovieModel
 }

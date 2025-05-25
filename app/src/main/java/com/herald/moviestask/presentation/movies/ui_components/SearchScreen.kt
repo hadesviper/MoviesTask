@@ -1,9 +1,11 @@
 package com.herald.moviestask.presentation.movies.ui_components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -12,8 +14,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -22,16 +24,20 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -40,55 +46,50 @@ import com.herald.moviestask.R
 import com.herald.moviestask.common.Constants
 import com.herald.moviestask.common.Utils.showSnackbar
 import com.herald.moviestask.domain.remote.models.MoviesModel
+import com.herald.moviestask.presentation.components.EmptyScreen
 import com.herald.moviestask.presentation.components.LoadingBar
 import com.herald.moviestask.presentation.components.Screens
-import com.herald.moviestask.presentation.components.TextWithIcon
 import com.herald.moviestask.presentation.movies.MoviesEvents
 import com.herald.moviestask.presentation.movies.MoviesIntents
 import com.herald.moviestask.presentation.movies.MoviesViewModel
 import kotlinx.coroutines.flow.collectLatest
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavHostController, moviesViewModel: MoviesViewModel) {
-    val movies = moviesViewModel.movies.collectAsLazyPagingItems()
+fun SearchScreen(navController: NavHostController, moviesViewModel: MoviesViewModel) {
+    val movies = moviesViewModel.searchResult.collectAsLazyPagingItems()
     val listState = rememberLazyGridState()
     val snackbarHostState = remember { SnackbarHostState() }
     val onMovieClick: (MoviesModel.MovieItem) -> Unit = remember { { moviesViewModel.handleIntents(MoviesIntents.OpenMovieDetails(it.id)) } }
-
+    val keyboardController = LocalSoftwareKeyboardController.current
     Scaffold(snackbarHost = {
         SnackbarHost(snackbarHostState)
     }, modifier = Modifier.fillMaxSize(), topBar = {
-        TopAppBar({
-            Text("Movies App")
-        },
-            actions = {
-                IconButton(onClick = { moviesViewModel.handleIntents(MoviesIntents.OpenMovieSearch) }) {
-                    Icon(Icons.Default.Search, contentDescription = "Search")
-                }
-            }
-        )
+        SearchTopBar(moviesViewModel::handleIntents)
     }) { innerPadding ->
 
-        Column(modifier = Modifier.padding(innerPadding)) {
+        Column(modifier = Modifier.padding(innerPadding).clickable(indication = null, interactionSource = null) { keyboardController?.hide() }) {
 
             LoadingBar(movies.loadState.refresh is LoadState.Loading)
-
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2), state = listState
-            ) {
-                items(movies.itemCount, contentType = { MoviesModel.MovieItem::class })
-                { index ->
-                    movies[index]?.let {
-                        MovieItem(it) { movie ->
-                            onMovieClick(movie)
+            when(movies.itemCount){
+                0 -> EmptyScreen()
+                else ->
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2), state = listState
+                    ) {
+                        items(movies.itemCount, contentType = { MoviesModel.MovieItem::class })
+                        { index ->
+                            movies[index]?.let {
+                                MovieItem(it) { movie ->
+                                    onMovieClick(movie)
+                                }
+                            }
+                        }
+                        item(span = { GridItemSpan(2) }) {
+                            LoadingBar(movies.loadState.append is LoadState.Loading)
                         }
                     }
-                }
-                item(span = { GridItemSpan(2) }) {
-                    LoadingBar(movies.loadState.append is LoadState.Loading)
-                }
             }
+
         }
         LaunchedEffect(Unit) {
             moviesViewModel.events.collectLatest { res ->
@@ -100,12 +101,49 @@ fun MainScreen(navController: NavHostController, moviesViewModel: MoviesViewMode
                     }
                     is MoviesEvents.NavigateToMovieDetails -> navController.navigate(Screens.DetailsScreen(res.id))
                     is MoviesEvents.Retry -> movies.retry()
-                    is MoviesEvents.NavigateToMovieSearch -> navController.navigate(Screens.SearchScreen)
+                    is MoviesEvents.NavigateBack -> navController.navigateUp()
                     else -> Unit
                 }
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SearchTopBar(handleIntents: (MoviesIntents) -> Unit) {
+    var searchText by remember { mutableStateOf("") }
+    TopAppBar(
+        {
+            TextField(
+                value = searchText,
+                onValueChange =
+                {
+                    searchText = it
+                    handleIntents(MoviesIntents.OnSearchQueryChanged(searchText))
+                },
+                placeholder = { Text("Search movies...") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }, navigationIcon = {
+            IconButton(onClick = { handleIntents(MoviesIntents.NavigateBack) })
+            {
+                Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Go Back")
+            }
+        },
+        actions = {
+            AnimatedVisibility(visible = searchText.isNotEmpty())
+            {
+                IconButton(onClick = {
+                    searchText = ""
+                    handleIntents(MoviesIntents.OnSearchQueryChanged(searchText))
+                })
+                {
+                    Icon(Icons.Default.Clear, contentDescription = "Clear")
+                }
+            }
+        }
+    )
 }
 
 
@@ -119,7 +157,7 @@ private fun MovieItem(movie: MoviesModel.MovieItem, onMovieClick: (MoviesModel.M
             .padding(10.dp),
             verticalArrangement = Arrangement.spacedBy(5.dp)) {
             AsyncImage(
-                Constants.BASE_IMAGE_URL+movie.posterPath,
+                "${Constants.BASE_IMAGE_URL}${movie.posterPath}",
                 "",
                 contentScale = ContentScale.FillWidth,
                 placeholder = painterResource(R.drawable.image_loading),
@@ -127,7 +165,7 @@ private fun MovieItem(movie: MoviesModel.MovieItem, onMovieClick: (MoviesModel.M
                 modifier = Modifier.height(200.dp)
             )
             Text(movie.title, minLines = 1, maxLines = 1, overflow = TextOverflow.Clip)
-            TextWithIcon(icon = Icons.Default.DateRange, text = movie.releaseDate, fontSize = 16.sp, iconSize = 16f)
+            Text("Date: ${movie.releaseDate}", maxLines = 1)
         }
     }
 }
