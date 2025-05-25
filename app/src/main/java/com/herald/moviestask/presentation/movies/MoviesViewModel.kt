@@ -40,10 +40,10 @@ class MoviesViewModel @Inject constructor(
     private fun loadMovieDetails(id: Int) = viewModelScope.launch {
         fetchMovieDetailsUseCase(id).collect { resource ->
             when (resource) {
-                is Resource.Loading -> _singleMovieStates.update { it.copy(isLoading = true) }
+                is Resource.Loading -> _singleMovieStates.update { SingleMovieStates(isLoading = true) }
                 is Resource.Success -> _singleMovieStates.update { SingleMovieStates(movie = resource.data) }
                 is Resource.Error -> {
-                    _singleMovieStates.update { it.copy(isLoading = false, error = getErrorMessage(resource.error)) }
+                    _singleMovieStates.update { SingleMovieStates(error = getErrorMessage(resource.error)) }
                     _events.emit(MoviesEvents.ErrorOccurred(getErrorMessage(resource.error)))
                 }
             }
