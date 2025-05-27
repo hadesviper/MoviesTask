@@ -30,7 +30,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -44,11 +43,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
-import androidx.navigation.NavController
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.herald.moviestask.R
 import com.herald.moviestask.common.Constants
-import com.herald.moviestask.common.Utils.showSnackBar
+import com.herald.moviestask.common.Utils.showRetrySnackbar
 import com.herald.moviestask.domain.models.MovieModel
 import com.herald.moviestask.presentation.components.LoadingBar
 import com.herald.moviestask.presentation.components.TextWithIcon
@@ -59,14 +58,14 @@ import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun DetailsScreen(
-    navController: NavController,
     movieID: Int,
-    moviesViewModel: MoviesViewModel
+    moviesViewModel: MoviesViewModel,
+    navigateUp: () -> Unit
 ) {
-    val states by moviesViewModel.movieDetailsStates.collectAsState()
-    val snackBarHostState = remember { SnackbarHostState() }
+    val states by moviesViewModel.movieDetailsState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
     Scaffold(
-        snackbarHost = { SnackbarHost(snackBarHostState) },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.fillMaxSize(),
         topBar = { DetailsTopAppBar { moviesViewModel.handleIntents(MoviesIntents.NavigateBack) } }
     ) { innerPadding ->
@@ -78,7 +77,7 @@ fun DetailsScreen(
                 val imageURL = Constants.BASE_BACK_IMAGE_URL+movie.backdropPath
                 AsyncImage(
                     imageURL,
-                    "Background Image",
+                    "Background Image ${movie.title}",
                     contentScale = ContentScale.FillWidth,
                     placeholder = painterResource(R.drawable.image_loading),
                     error = painterResource(R.drawable.no_image),
@@ -93,11 +92,11 @@ fun DetailsScreen(
         moviesViewModel.events.collectLatest { res ->
             when (res) {
                 is MoviesEvents.ErrorOccurred -> {
-                    showSnackBar(snackBarHostState, res.error) {
+                    showRetrySnackbar(snackbarHostState, res.error) {
                         moviesViewModel.handleIntents(MoviesIntents.LoadMovieDetails(movieID))
                     }
                 }
-                is MoviesEvents.NavigateBack -> { navController.navigateUp() }
+                is MoviesEvents.NavigateBack -> navigateUp()
                 else -> Unit
             }
         }

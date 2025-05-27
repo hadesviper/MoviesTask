@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.snapshotFlow
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.herald.moviestask.domain.models.MoviesModel.MovieItem
@@ -17,7 +16,6 @@ import com.herald.moviestask.presentation.movies.MoviesEvents
 import com.herald.moviestask.presentation.movies.MoviesIntents
 import com.herald.moviestask.presentation.movies.MoviesViewModel
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable
 fun PopularMoviesTab(
@@ -35,25 +33,19 @@ fun PopularMoviesTab(
             items(movies.itemCount, contentType = { MovieItem::class })
             { index ->
                 movies[index]?.let {
-                    MovieItem(it) { movie ->
-                        onMovieClick(movie)
-                    }
+                    MovieItem(it,onMovieClick)
                 }
             }
-            item(span = { GridItemSpan(2) }) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
                 LoadingBar(movies.loadState.append is LoadState.Loading)
             }
         }
     }
-    LaunchedEffect(Unit) {
-        snapshotFlow { movies.loadState}
-            .distinctUntilChanged()
-            .collectLatest{ loadStates ->
-                val refreshError = (loadStates.refresh as? LoadState.Error)?.error
-                val appendError = (loadStates.append as? LoadState.Error)?.error
-                val error = refreshError ?: appendError
-                error?.let { moviesViewModel.handleIntents(MoviesIntents.OnErrorOccurred(exception = it)) }
-            }
+    LaunchedEffect(movies.loadState) {
+        val refreshError = (movies.loadState.refresh as? LoadState.Error)?.error
+        val appendError = (movies.loadState.append as? LoadState.Error)?.error
+        val error = refreshError ?: appendError
+        error?.let { moviesViewModel.handleIntents(MoviesIntents.OnErrorOccurred(exception = it)) }
     }
     LaunchedEffect(Unit) {
         moviesViewModel.events.collectLatest {

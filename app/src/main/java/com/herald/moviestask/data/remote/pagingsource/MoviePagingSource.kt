@@ -1,6 +1,5 @@
 package com.herald.moviestask.data.remote.pagingsource
 
-import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.herald.moviestask.data.remote.RetroService
@@ -15,7 +14,6 @@ class MoviePagingSource(
         return try {
             val response = retroService.getPopularMovies(page)
             val movieData = response.toMovies().movieListItems
-            Log.i("TAG", "load: items page: $page ")
             LoadResult.Page(
                 data = movieData,
                 prevKey = if (page == 1) null else page - 1,

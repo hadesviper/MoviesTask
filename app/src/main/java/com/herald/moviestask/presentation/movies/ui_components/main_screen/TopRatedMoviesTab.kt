@@ -27,7 +27,7 @@ fun TopRatedMoviesTab(
     listState: LazyGridState,
     onMovieClick: (MovieItem) -> Unit,
 ) {
-    val state = moviesViewModel.topRatedMoviesStates.collectAsState()
+    val state = moviesViewModel.topRatedMoviesState.collectAsState()
     Column {
         when{
             state.value.movies?.movieListItems.isNullOrEmpty() -> EmptyScreen()
@@ -42,7 +42,7 @@ fun TopRatedMoviesTab(
                             onMovieClick(movie)
                         }
                     }
-                    item(span = { GridItemSpan(2) }){
+                    item(span = { GridItemSpan(maxLineSpan) }){
                         Text(modifier = Modifier.padding(10.dp),text = "This tab loads the first page only unlike the other tab, this one is for caching demonstration with room and it applies the caching flow mentioned in the task description, the other one uses paging 3 in order to load more pages and it uses the regular http request caching")
                     }
                 }

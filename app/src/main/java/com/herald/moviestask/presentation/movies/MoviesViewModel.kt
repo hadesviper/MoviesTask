@@ -8,8 +8,8 @@ import com.herald.moviestask.common.Resource
 import com.herald.moviestask.common.Utils.getErrorMessage
 import com.herald.moviestask.domain.models.AllUsesCases
 import com.herald.moviestask.domain.models.MoviesModel
-import com.herald.moviestask.presentation.movies.states.MovieDetailsStates
-import com.herald.moviestask.presentation.movies.states.MovieTopRatedStates
+import com.herald.moviestask.presentation.movies.states.MovieDetailsState
+import com.herald.moviestask.presentation.movies.states.MovieTopRatedState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -31,11 +31,11 @@ class MoviesViewModel @Inject constructor(
     private val useCases: AllUsesCases
 ) : ViewModel() {
 
-    private val _movieDetailsStates = MutableStateFlow(MovieDetailsStates())
-    val movieDetailsStates = _movieDetailsStates.asStateFlow()
+    private val _movieDetailsState = MutableStateFlow(MovieDetailsState())
+    val movieDetailsState = _movieDetailsState.asStateFlow()
 
-    private val _topRatedMoviesStates = MutableStateFlow(MovieTopRatedStates())
-    val topRatedMoviesStates = _topRatedMoviesStates.asStateFlow()
+    private val _topRatedMoviesState = MutableStateFlow(MovieTopRatedState())
+    val topRatedMoviesState = _topRatedMoviesState.asStateFlow()
 
     private val _events = MutableSharedFlow<MoviesEvents>()
     val events = _events.asSharedFlow()
@@ -59,7 +59,7 @@ class MoviesViewModel @Inject constructor(
             is MoviesIntents.RetryLoadingData       -> triggerEvent(MoviesEvents.Retry)
             is MoviesIntents.OpenMovieSearch        -> triggerEvent(MoviesEvents.NavigateToMovieSearch)
             is MoviesIntents.NavigateBack           -> triggerEvent(MoviesEvents.NavigateBack)
-            is MoviesIntents.OnErrorOccurred        -> triggerEvent(MoviesEvents.ErrorOccurred(getErrorMessage(intent.exception as Exception?)))
+            is MoviesIntents.OnErrorOccurred        -> triggerEvent(MoviesEvents.ErrorOccurred((intent.exception as Exception).getErrorMessage()))
             is MoviesIntents.OnSearchQueryChanged   -> onSearchQueryChanged(intent.query)
             is MoviesIntents.LoadMovieDetails       -> loadMovieDetails(intent.id)
             is MoviesIntents.LoadTopRatedMovies     -> loadCachedTopRatedMovies()
@@ -70,11 +70,11 @@ class MoviesViewModel @Inject constructor(
     private fun loadMovieDetails(id: Int) = viewModelScope.launch {
         useCases.fetchMovieDetailsUseCase(id).collect { resource ->
             when (resource) {
-                is Resource.Loading -> _movieDetailsStates.update { MovieDetailsStates(isLoading = true) }
-                is Resource.Success -> _movieDetailsStates.update { MovieDetailsStates(movie = resource.data) }
+                is Resource.Loading -> _movieDetailsState.update { MovieDetailsState(isLoading = true) }
+                is Resource.Success -> _movieDetailsState.update { MovieDetailsState(movie = resource.data) }
                 is Resource.Error -> {
-                    getErrorMessage(resource.error).apply {
-                        _movieDetailsStates.update { MovieDetailsStates(error = this) }
+                    resource.error.getErrorMessage().apply {
+                        _movieDetailsState.update { MovieDetailsState(error = this) }
                         triggerEvent(MoviesEvents.ErrorOccurred(this))
                     }
                 }
@@ -85,17 +85,17 @@ class MoviesViewModel @Inject constructor(
     private fun loadCachedTopRatedMovies(page: Int = 1) = viewModelScope.launch {
         useCases.fetchCachedMoviesUseCase().collect { resource ->
             when (resource) {
-                is Resource.Loading -> _topRatedMoviesStates.update { it.copy(isLoading = true, error = null)
+                is Resource.Loading -> _topRatedMoviesState.update { it.copy(isLoading = true, error = null)
                 }
                 is Resource.Success -> {
-                    if (!resource.data?.movieListItems.isNullOrEmpty()) {
-                        _topRatedMoviesStates.update { MovieTopRatedStates(movies = resource.data) }
+                    if (resource.data.movieListItems.isNotEmpty()) {
+                        _topRatedMoviesState.update { MovieTopRatedState(movies = resource.data) }
                     }
                     loadRemoteTopRatedMovies(page)
                 }
                 is Resource.Error -> {
-                    getErrorMessage(resource.error).apply {
-                        _topRatedMoviesStates.update { it.copy(isLoading = false, error = this) }
+                    resource.error.getErrorMessage().apply {
+                        _topRatedMoviesState.update { it.copy(isLoading = false, error = this) }
                         triggerEvent(MoviesEvents.ErrorOccurred(this))
                     }
                 }
@@ -106,17 +106,17 @@ class MoviesViewModel @Inject constructor(
         useCases.fetchTopRatedMovies(page).collect { resource ->
             when (resource) {
                 is Resource.Loading -> {
-                    val isCachedMoviesEmpty = _topRatedMoviesStates.value.movies?.movieListItems.isNullOrEmpty()
-                    _topRatedMoviesStates.update { it.copy(isLoading = isCachedMoviesEmpty ,error = null) }
+                    val isCachedMoviesEmpty = _topRatedMoviesState.value.movies?.movieListItems.isNullOrEmpty()
+                    _topRatedMoviesState.update { it.copy(isLoading = isCachedMoviesEmpty ,error = null) }
                 }
                 is Resource.Success -> {
-                    _topRatedMoviesStates.update { MovieTopRatedStates(movies = resource.data) }
+                    _topRatedMoviesState.update { MovieTopRatedState(movies = resource.data) }
                     useCases.deleteCacheUseCase()
-                    useCases.cacheMoviesUseCase(resource.data?.movieListItems ?: emptyList())
+                    useCases.cacheMoviesUseCase(resource.data.movieListItems)
                 }
                 is Resource.Error -> {
-                    getErrorMessage(resource.error).apply {
-                        _topRatedMoviesStates.update { it.copy(isLoading = false, error = this) }
+                    resource.error.getErrorMessage().apply {
+                        _topRatedMoviesState.update { it.copy(isLoading = false, error = this) }
                         triggerEvent(MoviesEvents.ErrorOccurred(this))
                     }
                 }

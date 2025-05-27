@@ -37,36 +37,36 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.herald.moviestask.common.Utils.showSnackBar
+import com.herald.moviestask.common.Utils.showRetrySnackbar
 import com.herald.moviestask.domain.models.MoviesModel
 import com.herald.moviestask.presentation.components.EmptyScreen
 import com.herald.moviestask.presentation.components.LoadingBar
-import com.herald.moviestask.presentation.components.Screens
 import com.herald.moviestask.presentation.movies.MoviesEvents
 import com.herald.moviestask.presentation.movies.MoviesIntents
 import com.herald.moviestask.presentation.movies.MoviesViewModel
 import com.herald.moviestask.presentation.movies.ui_components.main_screen.MovieItem
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable
-fun SearchScreen(navController: NavHostController, moviesViewModel: MoviesViewModel) {
+fun SearchScreen(
+    moviesViewModel: MoviesViewModel,
+    navigateUp: () -> Unit,
+    navigateToDetails: (Int)->Unit
+) {
     val movies = moviesViewModel.searchResult.collectAsLazyPagingItems()
     var searchText = remember { mutableStateOf("") }
     val listState = rememberLazyGridState()
-    val snackBarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = remember { SnackbarHostState() }
     val onMovieClick: (MoviesModel.MovieItem) -> Unit = remember { { moviesViewModel.handleIntents(MoviesIntents.OpenMovieDetails(it.id)) } }
     val keyboardController = LocalSoftwareKeyboardController.current
     Scaffold(snackbarHost = {
-        SnackbarHost(snackBarHostState)
+        SnackbarHost(snackbarHostState)
     }, modifier = Modifier.fillMaxSize(), topBar = {
         SearchTopBar(searchText,moviesViewModel::handleIntents)
     }) { innerPadding ->
@@ -105,29 +105,25 @@ fun SearchScreen(navController: NavHostController, moviesViewModel: MoviesViewMo
         BackHandler {
             moviesViewModel.handleIntents(MoviesIntents.NavigateBack)
         }
-        LaunchedEffect(Unit) {
-            snapshotFlow { movies.loadState }
-                .distinctUntilChanged()
-                .collectLatest { loadStates ->
-                    val refreshError = (loadStates.refresh as? LoadState.Error)?.error
-                    val appendError = (loadStates.append as? LoadState.Error)?.error
-                    val error = refreshError ?: appendError
-                    error?.let { moviesViewModel.handleIntents(MoviesIntents.OnErrorOccurred(exception = it)) }
-                }
+        LaunchedEffect(movies.loadState) {
+            val refreshError = (movies.loadState.refresh as? LoadState.Error)?.error
+            val appendError = (movies.loadState.append as? LoadState.Error)?.error
+            val error = refreshError ?: appendError
+            error?.let { moviesViewModel.handleIntents(MoviesIntents.OnErrorOccurred(exception = it)) }
         }
         LaunchedEffect(Unit) {
-            moviesViewModel.events.collectLatest { res ->
-                when (res) {
+            moviesViewModel.events.collectLatest { event ->
+                when (event) {
                     is MoviesEvents.ErrorOccurred -> {
                         keyboardController?.hide()
-                        showSnackBar(snackBarHostState, res.error) {
+                        showRetrySnackbar(snackbarHostState, event.error) {
                             moviesViewModel.handleIntents(MoviesIntents.RetryLoadingData)
                         }
                     }
-                    is MoviesEvents.NavigateToMovieDetails -> navController.navigate(Screens.DetailsScreen(res.id))
+                    is MoviesEvents.NavigateToMovieDetails -> navigateToDetails(event.id)
                     is MoviesEvents.Retry -> movies.retry()
                     is MoviesEvents.NavigateBack -> {
-                        navController.navigateUp()
+                        navigateUp()
                         keyboardController?.hide()
                         moviesViewModel.handleIntents(MoviesIntents.OnSearchQueryChanged(""))
                     }

@@ -1,9 +1,9 @@
 package com.herald.moviestask.presentation.movies.states
 
-import com.herald.moviestask.domain.models.MoviesModel
+import com.herald.moviestask.domain.models.MovieModel
 
-data class MovieTopRatedStates (
+data class MovieDetailsState(
     val isLoading: Boolean = false,
-    val movies: MoviesModel? = null,
+    val movie: MovieModel? = null,
     val error: String? = null
 )

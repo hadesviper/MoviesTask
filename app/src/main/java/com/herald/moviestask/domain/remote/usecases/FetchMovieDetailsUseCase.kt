@@ -9,7 +9,7 @@ class FetchMovieDetailsUseCase @Inject constructor(
     private val retroRepository: RetroRepository
 ) {
     operator fun invoke(id:Int) = flow {
-        emit(Resource.Loading())
+        emit(Resource.Loading)
         try {
             val movie = retroRepository.getMovieDetails(id)
             emit(Resource.Success(movie))
