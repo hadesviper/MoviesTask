@@ -1,13 +1,18 @@
 package com.herald.moviestask.presentation.movies.ui_components.main_screen
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.herald.moviestask.domain.models.MoviesModel.MovieItem
 import com.herald.moviestask.presentation.components.EmptyScreen
 import com.herald.moviestask.presentation.components.LoadingBar
@@ -36,6 +41,9 @@ fun TopRatedMoviesTab(
                         MovieItem(it) { movie ->
                             onMovieClick(movie)
                         }
+                    }
+                    item(span = { GridItemSpan(2) }){
+                        Text(modifier = Modifier.padding(10.dp),text = "This tab loads the first page only unlike the other tab, this one is for caching demonstration with room and it applies the caching flow mentioned in the task description, the other one uses paging 3 in order to load more pages and it uses the regular http request caching")
                     }
                 }
             }

@@ -14,7 +14,7 @@ import com.herald.moviestask.presentation.movies.MoviesViewModel
 import com.herald.moviestask.presentation.movies.ui_components.DetailsScreen
 import com.herald.moviestask.presentation.movies.ui_components.SearchScreen
 import com.herald.moviestask.presentation.movies.ui_components.main_screen.MainScreen
-import com.herald.moviestask.presentation.ui.theme.MoviesTaskTheme
+import com.herald.moviestask.presentation.theme.MoviesTaskTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

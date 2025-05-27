@@ -2,7 +2,6 @@ package com.herald.moviestask.presentation.movies.ui_components
 
 import android.content.Context
 import android.content.Intent
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -65,9 +64,9 @@ fun DetailsScreen(
     moviesViewModel: MoviesViewModel
 ) {
     val states by moviesViewModel.movieDetailsStates.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { SnackbarHost(snackBarHostState) },
         modifier = Modifier.fillMaxSize(),
         topBar = { DetailsTopAppBar { moviesViewModel.handleIntents(MoviesIntents.NavigateBack) } }
     ) { innerPadding ->
@@ -94,7 +93,7 @@ fun DetailsScreen(
         moviesViewModel.events.collectLatest { res ->
             when (res) {
                 is MoviesEvents.ErrorOccurred -> {
-                    showSnackBar(snackbarHostState, res.error) {
+                    showSnackBar(snackBarHostState, res.error) {
                         moviesViewModel.handleIntents(MoviesIntents.LoadMovieDetails(movieID))
                     }
                 }
@@ -193,35 +192,32 @@ private fun BasicDataRow(movie: MovieModel) {
             iconSize
         )
 
-        Button(
-            onClick = {
-                openYoutubeLink(
-                    context = context,
-                    youtubeID = movie.ytTrailer
+        if (movie.ytTrailer.isNotEmpty()){
+            Button(
+                onClick = {
+                    openYoutubeLink(
+                        context = context,
+                        youtubeID = movie.ytTrailer
+                    )
+                },
+            ) {
+                TextWithIcon(
+                    icon = Icons.Filled.PlayArrow,
+                    text = "Trailer",
+                    fontSize = MaterialTheme.typography.titleMedium.fontSize,
+                    iconSize = MaterialTheme.typography.titleMedium.fontSize.value
                 )
-            },
-        ) {
-            TextWithIcon(
-                icon = Icons.Filled.PlayArrow,
-                text = "Trailer",
-                fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                iconSize = MaterialTheme.typography.titleMedium.fontSize.value
-            )
+            }
         }
-
     }
 }
 
 
 private fun openYoutubeLink(context: Context, youtubeID: String) {
-    if (youtubeID.isBlank()) {
-        Toast.makeText(context, "No trailer was found", Toast.LENGTH_SHORT).show()
-    } else {
-        context.startActivity(
-            Intent(
-                Intent.ACTION_VIEW,
-                "http://m.youtube.com/watch?v=$youtubeID".toUri()
-            )
+    context.startActivity(
+        Intent(
+            Intent.ACTION_VIEW,
+            "http://m.youtube.com/watch?v=$youtubeID".toUri()
         )
-    }
+    )
 }
