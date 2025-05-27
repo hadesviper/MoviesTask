@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
-class FetchTopRatedMovies @Inject constructor(
+class FetchTopRatedMoviesUseCase @Inject constructor(
     private val retroRepository: RetroRepository
 ) {
     operator fun invoke(page: Int): Flow<Resource<MoviesModel>>  = flow {

@@ -103,7 +103,7 @@ class MoviesViewModel @Inject constructor(
         }
     }
     private fun loadRemoteTopRatedMovies(page: Int = 1) = viewModelScope.launch {
-        useCases.fetchTopRatedMovies(page).collect { resource ->
+        useCases.fetchTopRatedMoviesUseCase(page).collect { resource ->
             when (resource) {
                 is Resource.Loading -> {
                     val isCachedMoviesEmpty = _topRatedMoviesState.value.movies?.movieListItems.isNullOrEmpty()
