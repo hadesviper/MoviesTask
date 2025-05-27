@@ -20,9 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavHostController
-import com.herald.moviestask.common.Utils.showSnackBar
-import com.herald.moviestask.presentation.components.Screens
+import com.herald.moviestask.common.Utils.showRetrySnackbar
 import com.herald.moviestask.presentation.movies.MoviesEvents
 import com.herald.moviestask.presentation.movies.MoviesIntents
 import com.herald.moviestask.presentation.movies.MoviesViewModel
@@ -30,16 +28,20 @@ import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavHostController, moviesViewModel: MoviesViewModel) {
+fun MainScreen(
+    moviesViewModel: MoviesViewModel,
+    navigateToSearch: ()->Unit,
+    navigateToDetails: (Int)->Unit
+) {
     val listStatePopular = rememberLazyGridState()
-    val listStateTrending = rememberLazyGridState()
-    val snackBarHostState = remember { SnackbarHostState() }
+    val listStateTopRated = rememberLazyGridState()
+    val snackbarHostState = remember { SnackbarHostState() }
     val tabs = remember { TabItem.entries.toTypedArray() }
     val pagerState = rememberPagerState(pageCount = { tabs.size })
     val coroutineScope = rememberCoroutineScope()
 
     Scaffold(snackbarHost = {
-        SnackbarHost(snackBarHostState)
+        SnackbarHost(snackbarHostState)
     }, modifier = Modifier.fillMaxSize(), topBar = {
         TopAppBar(
             {
@@ -55,7 +57,7 @@ fun MainScreen(navController: NavHostController, moviesViewModel: MoviesViewMode
         Column(modifier = Modifier.padding(innerPadding)) {
             ViewPagerWithTabs(
                 moviesViewModel,
-                listStateTrending,
+                listStateTopRated,
                 listStatePopular,
                 tabs,
                 pagerState,
@@ -64,20 +66,16 @@ fun MainScreen(navController: NavHostController, moviesViewModel: MoviesViewMode
         }
 
         LaunchedEffect(Unit) {
-            moviesViewModel.events.collectLatest { res ->
-                when (res) {
+            moviesViewModel.events.collectLatest { event ->
+                when (event) {
                     is MoviesEvents.ErrorOccurred -> {
-                        showSnackBar(snackBarHostState, res.error) {
+                        showRetrySnackbar(snackbarHostState, event.error) {
                             moviesViewModel.handleIntents(MoviesIntents.RetryLoadingData)
                         }
                     }
 
-                    is MoviesEvents.NavigateToMovieDetails -> navController.navigate(
-                        Screens.DetailsScreen(
-                            res.id
-                        )
-                    )
-                    is MoviesEvents.NavigateToMovieSearch -> navController.navigate(Screens.SearchScreen)
+                    is MoviesEvents.NavigateToMovieDetails -> navigateToDetails(event.id)
+                    is MoviesEvents.NavigateToMovieSearch -> navigateToSearch()
                     else -> Unit
                 }
             }

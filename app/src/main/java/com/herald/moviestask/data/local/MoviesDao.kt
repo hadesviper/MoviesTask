@@ -10,7 +10,7 @@ import com.herald.moviestask.data.local.entities.MoviesEntity
 @Dao
 interface MoviesDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun addMovie(user: MoviesEntity)
+    suspend fun addMovies(movies: List<MoviesEntity>)
 
     @Query("DELETE FROM Movies")
     suspend fun deleteAllMovies()

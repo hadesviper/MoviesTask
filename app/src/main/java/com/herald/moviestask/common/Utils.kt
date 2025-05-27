@@ -8,17 +8,17 @@ import javax.net.ssl.SSLPeerUnverifiedException
 
 object Utils {
 
-    fun getErrorMessage(e: Exception?): String {
-        return when (e) {
-            is HttpException -> "Error Occurred, code: ${e.code()}"
+    fun Exception?.getErrorMessage(): String {
+        return when (this) {
+            is HttpException -> "Error Occurred, code: ${this.code()}"
             is SSLPeerUnverifiedException -> "MITM attack detected"
             is IOException -> "No Internet Connection"
-            else -> e?.message ?: "Unknown Error"
+            else -> this?.message ?: "Unknown Error"
         }
     }
 
-    suspend fun showSnackBar(snackBarHostState: SnackbarHostState, message: String = "error", actionPerformed: () -> Unit ) {
-        val result = snackBarHostState.showSnackbar(
+    suspend fun showRetrySnackbar(snackbarHostState: SnackbarHostState, message: String = "error", actionPerformed: () -> Unit ) {
+        val result = snackbarHostState.showSnackbar(
             message = message,
             actionLabel = "Retry",
         )

@@ -14,7 +14,7 @@ import com.herald.moviestask.presentation.movies.MoviesViewModel
 import com.herald.moviestask.presentation.movies.ui_components.DetailsScreen
 import com.herald.moviestask.presentation.movies.ui_components.SearchScreen
 import com.herald.moviestask.presentation.movies.ui_components.main_screen.MainScreen
-import com.herald.moviestask.presentation.ui.theme.MoviesTaskTheme
+import com.herald.moviestask.presentation.theme.MoviesTaskTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -29,12 +29,24 @@ class MainActivity : ComponentActivity() {
                 NavHost(
                     navController = navController,
                     startDestination = Screens.MainScreen
-                ){
-                    composable<Screens.MainScreen> { MainScreen(navController, viewModel) }
-                    composable<Screens.SearchScreen> { SearchScreen(navController, viewModel) }
+                ) {
+                    composable<Screens.MainScreen> {
+                        MainScreen(
+                            viewModel,
+                            { navController.navigate(Screens.SearchScreen) },
+                            { navController.navigate(Screens.DetailsScreen(it)) }
+                        )
+                    }
+                    composable<Screens.SearchScreen> {
+                        SearchScreen(
+                            viewModel,
+                            { navController.navigateUp() },
+                            { navController.navigate(Screens.DetailsScreen(it)) }
+                        )
+                    }
                     composable<Screens.DetailsScreen> {
                         val movieID = it.toRoute<Screens.DetailsScreen>()
-                        DetailsScreen(navController,movieID.id,viewModel)
+                        DetailsScreen(movieID.id, viewModel) { navController.navigateUp() }
                     }
                 }
             }

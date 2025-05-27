@@ -16,21 +16,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun EmptyScreen() {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Icon(
-            modifier = Modifier.size(80.dp),
-            imageVector = Icons.Default.Warning,
-            contentDescription = "Warning",
-        )
-        Text(
-            text = "It's Lonely In Here",
-            color = MaterialTheme.colorScheme.primary,
-            fontSize = 20.sp,
-        )
+fun EmptyScreen(isVisible: Boolean = true) {
+    if (isVisible) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Icon(
+                modifier = Modifier.size(80.dp),
+                imageVector = Icons.Default.Warning,
+                contentDescription = "Warning",
+            )
+            Text(
+                text = "It's Lonely In Here",
+                color = MaterialTheme.colorScheme.primary,
+                fontSize = 20.sp,
+            )
+        }
     }
 }

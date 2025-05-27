@@ -6,10 +6,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -20,11 +19,10 @@ import com.herald.moviestask.presentation.movies.MoviesViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ViewPagerWithTabs(
     moviesViewModel: MoviesViewModel,
-    listStateTrending: LazyGridState,
+    listStateTopRated: LazyGridState,
     listStatePopular: LazyGridState,
     tabs: Array<TabItem>,
     pagerState: PagerState,
@@ -35,7 +33,7 @@ fun ViewPagerWithTabs(
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        PrimaryTabRow(
+        TabRow(
             selectedTabIndex = pagerState.currentPage,
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -62,9 +60,9 @@ fun ViewPagerWithTabs(
                     listStatePopular,
                     onMovieClick
                 )
-                TabItem.Trending -> TrendingMoviesTab(
+                TabItem.TopRated -> TopRatedMoviesTab(
                     moviesViewModel,
-                    listStateTrending,
+                    listStateTopRated,
                     onMovieClick
                 )
             }
@@ -74,5 +72,5 @@ fun ViewPagerWithTabs(
 
 enum class TabItem(val title: String) {
     Popular("Popular"),
-    Trending("Top Rated"),
+    TopRated("Top Rated"),
 }

@@ -27,9 +27,9 @@ object CashingModule {
 
     @Provides
     @Singleton
-    fun providesDao(appDatabase: AppDatabase): MoviesDao = appDatabase.getDao()
+    fun providesMoviesDao(appDatabase: AppDatabase): MoviesDao = appDatabase.getDao()
 
     @Provides
     @Singleton
-    fun providesUsersRepo(moviesDao: MoviesDao): CachingRepo = CachingRepoImpl(moviesDao)
+    fun providesMoviesCachingRepo(moviesDao: MoviesDao): CachingRepo = CachingRepoImpl(moviesDao)
 }

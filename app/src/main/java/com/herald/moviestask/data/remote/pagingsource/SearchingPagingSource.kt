@@ -1,37 +1,35 @@
 package com.herald.moviestask.data.remote.pagingsource
 
-import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.herald.moviestask.data.remote.RetroService
-import com.herald.moviestask.data.remote.dto.MoviesDTO
 import com.herald.moviestask.domain.models.MoviesModel
 
 class SearchingPagingSource(
     private val retroService: RetroService,
     private val query: String,
-    private val onError: (Exception) -> Unit
 ) : PagingSource<Int, MoviesModel.MovieItem>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MoviesModel.MovieItem> {
         val page = params.key ?: 1
         return try {
-            val response = if (query.isNotEmpty()){
-                retroService.searchMovies(page,query)}
-            else {
-                MoviesDTO(
-                    page = 0, results = listOf(), totalPages = 0, totalResults = 0
+            if (query.isNotEmpty()){
+                val response = retroService.searchMovies(page,query)
+                val movieData = response.toMovies().movieListItems
+                LoadResult.Page(
+                    data = movieData,
+                    prevKey = if (page == 1) null else page - 1,
+                    nextKey = if (page < response.totalPages) page + 1 else null
                 )
             }
-            val movieData = response.toMovies().movieListItems
-            Log.i("TAG", "load: items page: $page ")
-            LoadResult.Page(
-                data = movieData,
-                prevKey = if (page == 1) null else page - 1,
-                nextKey = if (page < response.totalPages) page + 1 else null
-            )
+            else {
+                LoadResult.Page(
+                    data = emptyList(),
+                    prevKey = null,
+                    nextKey = null,
+                )
+            }
         } catch (e: Exception) {
-            onError(e)
             LoadResult.Error(e)
         }
     }

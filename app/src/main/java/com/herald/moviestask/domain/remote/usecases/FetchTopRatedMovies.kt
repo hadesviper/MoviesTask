@@ -7,13 +7,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
-class FetchTrendingMovies @Inject constructor(
+class FetchTopRatedMovies @Inject constructor(
     private val retroRepository: RetroRepository
 ) {
     operator fun invoke(page: Int): Flow<Resource<MoviesModel>>  = flow {
+        emit(Resource.Loading)
         try {
-            emit(Resource.Loading())
-            val movies = retroRepository.getTrendingMovies(page)
+            val movies = retroRepository.getTopRatedMovies(page)
             emit(Resource.Success(movies))
         } catch (e: Exception) {
             emit(Resource.Error(e))

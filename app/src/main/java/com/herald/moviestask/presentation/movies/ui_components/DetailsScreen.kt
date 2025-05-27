@@ -2,7 +2,6 @@ package com.herald.moviestask.presentation.movies.ui_components
 
 import android.content.Context
 import android.content.Intent
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -31,7 +30,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -45,11 +43,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
-import androidx.navigation.NavController
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.herald.moviestask.R
 import com.herald.moviestask.common.Constants
-import com.herald.moviestask.common.Utils.showSnackBar
+import com.herald.moviestask.common.Utils.showRetrySnackbar
 import com.herald.moviestask.domain.models.MovieModel
 import com.herald.moviestask.presentation.components.LoadingBar
 import com.herald.moviestask.presentation.components.TextWithIcon
@@ -60,11 +58,11 @@ import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun DetailsScreen(
-    navController: NavController,
     movieID: Int,
-    moviesViewModel: MoviesViewModel
+    moviesViewModel: MoviesViewModel,
+    navigateUp: () -> Unit
 ) {
-    val states by moviesViewModel.movieDetailsStates.collectAsState()
+    val states by moviesViewModel.movieDetailsState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -79,7 +77,7 @@ fun DetailsScreen(
                 val imageURL = Constants.BASE_BACK_IMAGE_URL+movie.backdropPath
                 AsyncImage(
                     imageURL,
-                    "Background Image",
+                    "Background Image ${movie.title}",
                     contentScale = ContentScale.FillWidth,
                     placeholder = painterResource(R.drawable.image_loading),
                     error = painterResource(R.drawable.no_image),
@@ -94,11 +92,11 @@ fun DetailsScreen(
         moviesViewModel.events.collectLatest { res ->
             when (res) {
                 is MoviesEvents.ErrorOccurred -> {
-                    showSnackBar(snackbarHostState, res.error) {
+                    showRetrySnackbar(snackbarHostState, res.error) {
                         moviesViewModel.handleIntents(MoviesIntents.LoadMovieDetails(movieID))
                     }
                 }
-                is MoviesEvents.NavigateBack -> { navController.navigateUp() }
+                is MoviesEvents.NavigateBack -> navigateUp()
                 else -> Unit
             }
         }
@@ -193,35 +191,32 @@ private fun BasicDataRow(movie: MovieModel) {
             iconSize
         )
 
-        Button(
-            onClick = {
-                openYoutubeLink(
-                    context = context,
-                    youtubeID = movie.ytTrailer
+        if (movie.ytTrailer.isNotEmpty()){
+            Button(
+                onClick = {
+                    openYoutubeLink(
+                        context = context,
+                        youtubeID = movie.ytTrailer
+                    )
+                },
+            ) {
+                TextWithIcon(
+                    icon = Icons.Filled.PlayArrow,
+                    text = "Trailer",
+                    fontSize = MaterialTheme.typography.titleMedium.fontSize,
+                    iconSize = MaterialTheme.typography.titleMedium.fontSize.value
                 )
-            },
-        ) {
-            TextWithIcon(
-                icon = Icons.Filled.PlayArrow,
-                text = "Trailer",
-                fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                iconSize = MaterialTheme.typography.titleMedium.fontSize.value
-            )
+            }
         }
-
     }
 }
 
 
 private fun openYoutubeLink(context: Context, youtubeID: String) {
-    if (youtubeID.isBlank()) {
-        Toast.makeText(context, "No trailer was found", Toast.LENGTH_SHORT).show()
-    } else {
-        context.startActivity(
-            Intent(
-                Intent.ACTION_VIEW,
-                "http://m.youtube.com/watch?v=$youtubeID".toUri()
-            )
+    context.startActivity(
+        Intent(
+            Intent.ACTION_VIEW,
+            "http://m.youtube.com/watch?v=$youtubeID".toUri()
         )
-    }
+    )
 }

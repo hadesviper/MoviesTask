@@ -10,8 +10,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.herald.moviestask.domain.models.MoviesModel.MovieItem
+import com.herald.moviestask.presentation.components.EmptyScreen
 import com.herald.moviestask.presentation.components.LoadingBar
 import com.herald.moviestask.presentation.movies.MoviesEvents
+import com.herald.moviestask.presentation.movies.MoviesIntents
 import com.herald.moviestask.presentation.movies.MoviesViewModel
 import kotlinx.coroutines.flow.collectLatest
 
@@ -23,24 +25,27 @@ fun PopularMoviesTab(
 ) {
     val movies = moviesViewModel.movies.collectAsLazyPagingItems()
     Column {
-
         LoadingBar(movies.loadState.refresh is LoadState.Loading)
-
+        EmptyScreen(movies.itemCount == 0)
         LazyVerticalGrid(
             columns = GridCells.Fixed(2), state = listState
         ) {
             items(movies.itemCount, contentType = { MovieItem::class })
             { index ->
                 movies[index]?.let {
-                    MovieItem(it) { movie ->
-                        onMovieClick(movie)
-                    }
+                    MovieItem(it,onMovieClick)
                 }
             }
-            item(span = { GridItemSpan(2) }) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
                 LoadingBar(movies.loadState.append is LoadState.Loading)
             }
         }
+    }
+    LaunchedEffect(movies.loadState) {
+        val refreshError = (movies.loadState.refresh as? LoadState.Error)?.error
+        val appendError = (movies.loadState.append as? LoadState.Error)?.error
+        val error = refreshError ?: appendError
+        error?.let { moviesViewModel.handleIntents(MoviesIntents.OnErrorOccurred(exception = it)) }
     }
     LaunchedEffect(Unit) {
         moviesViewModel.events.collectLatest {
