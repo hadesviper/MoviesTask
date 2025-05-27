@@ -10,7 +10,7 @@ class CachingRepoImpl @Inject constructor(
     private val moviesDao: MoviesDao
 ): CachingRepo {
 
-    override suspend fun saveTrendingMovie(movies: List<MoviesModel.MovieItem>) {
+    override suspend fun saveTopRatedMovie(movies: List<MoviesModel.MovieItem>) {
         movies.forEachIndexed {index, movie ->
             moviesDao.addMovie(
                 MoviesEntity(
@@ -29,7 +29,7 @@ class CachingRepoImpl @Inject constructor(
         moviesDao.deleteAllMovies()
     }
 
-    override suspend fun getTrendingMovies(): MoviesModel {
+    override suspend fun getTopRatedMovies(): MoviesModel {
         val movies = moviesDao.getAllMovies()
         return MoviesModel(
             movieListItems = movies.map {

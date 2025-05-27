@@ -9,7 +9,7 @@ class CacheMoviesUseCase @Inject constructor(
 ){
     suspend operator fun invoke(movie: List<MoviesModel.MovieItem>) {
         try {
-            cachingRepo.saveTrendingMovie(movie)
+            cachingRepo.saveTopRatedMovie(movie)
         }
         catch (e:Exception){
             e.printStackTrace()

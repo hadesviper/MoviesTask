@@ -15,24 +15,24 @@ class RetroRepoImpl @Inject constructor(
     private val retroService: RetroService
 ): RetroRepository {
 
-    override fun getPopularMovies(onError: (Exception) -> Unit): Flow<PagingData<MoviesModel.MovieItem>> {
+    override fun getPopularMovies(): Flow<PagingData<MoviesModel.MovieItem>> {
         return Pager(
             config = PagingConfig(
                 pageSize = 20,
             ),
             pagingSourceFactory = {
-                MoviePagingSource(retroService, onError)
+                MoviePagingSource(retroService)
             }
         ).flow
     }
 
-    override fun searchMovies(query: String,onError: (Exception) -> Unit): Flow<PagingData<MoviesModel.MovieItem>> {
+    override fun searchMovies(query: String): Flow<PagingData<MoviesModel.MovieItem>> {
         return Pager(
             config = PagingConfig(
                 pageSize = 20,
             ),
             pagingSourceFactory = {
-                SearchingPagingSource(retroService,query, onError)
+                SearchingPagingSource(retroService,query)
             }
         ).flow
     }
@@ -41,7 +41,7 @@ class RetroRepoImpl @Inject constructor(
         return retroService.getMovieDetails(id).toMovieModel()
     }
 
-    override suspend fun getTrendingMovies(page: Int): MoviesModel {
-        return retroService.getTrendingMovies(page).toMovies()
+    override suspend fun getTopRatedMovies(page: Int): MoviesModel {
+        return retroService.getTopRatedMovies(page).toMovies()
     }
 }

@@ -8,7 +8,6 @@ import com.herald.moviestask.domain.models.MoviesModel
 
 class MoviePagingSource(
     private val retroService: RetroService,
-    private val onError: (Exception) -> Unit
 ) : PagingSource<Int, MoviesModel.MovieItem>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MoviesModel.MovieItem> {
@@ -23,7 +22,6 @@ class MoviePagingSource(
                 nextKey = if (page < response.totalPages) page + 1 else null
             )
         } catch (e: Exception) {
-            onError(e)
             LoadResult.Error(e)
         }
     }

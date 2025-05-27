@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun ViewPagerWithTabs(
     moviesViewModel: MoviesViewModel,
-    listStateTrending: LazyGridState,
+    listStateTopRated: LazyGridState,
     listStatePopular: LazyGridState,
     tabs: Array<TabItem>,
     pagerState: PagerState,
@@ -62,9 +62,9 @@ fun ViewPagerWithTabs(
                     listStatePopular,
                     onMovieClick
                 )
-                TabItem.Trending -> TrendingMoviesTab(
+                TabItem.TopRated -> TopRatedMoviesTab(
                     moviesViewModel,
-                    listStateTrending,
+                    listStateTopRated,
                     onMovieClick
                 )
             }
@@ -74,5 +74,5 @@ fun ViewPagerWithTabs(
 
 enum class TabItem(val title: String) {
     Popular("Popular"),
-    Trending("Top Rated"),
+    TopRated("Top Rated"),
 }

@@ -32,7 +32,7 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun MainScreen(navController: NavHostController, moviesViewModel: MoviesViewModel) {
     val listStatePopular = rememberLazyGridState()
-    val listStateTrending = rememberLazyGridState()
+    val listStateTopRated = rememberLazyGridState()
     val snackBarHostState = remember { SnackbarHostState() }
     val tabs = remember { TabItem.entries.toTypedArray() }
     val pagerState = rememberPagerState(pageCount = { tabs.size })
@@ -55,7 +55,7 @@ fun MainScreen(navController: NavHostController, moviesViewModel: MoviesViewMode
         Column(modifier = Modifier.padding(innerPadding)) {
             ViewPagerWithTabs(
                 moviesViewModel,
-                listStateTrending,
+                listStateTopRated,
                 listStatePopular,
                 tabs,
                 pagerState,

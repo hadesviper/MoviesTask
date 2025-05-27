@@ -3,20 +3,16 @@ package com.herald.moviestask.presentation.movies.ui_components
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,18 +27,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
-import coil.compose.AsyncImage
-import com.herald.moviestask.R
-import com.herald.moviestask.common.Constants
 import com.herald.moviestask.common.Utils.showSnackBar
 import com.herald.moviestask.domain.models.MoviesModel
 import com.herald.moviestask.presentation.components.EmptyScreen
@@ -51,7 +41,9 @@ import com.herald.moviestask.presentation.components.Screens
 import com.herald.moviestask.presentation.movies.MoviesEvents
 import com.herald.moviestask.presentation.movies.MoviesIntents
 import com.herald.moviestask.presentation.movies.MoviesViewModel
+import com.herald.moviestask.presentation.movies.ui_components.main_screen.MovieItem
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable
 fun SearchScreen(navController: NavHostController, moviesViewModel: MoviesViewModel) {
@@ -67,13 +59,17 @@ fun SearchScreen(navController: NavHostController, moviesViewModel: MoviesViewMo
         SearchTopBar(searchText,moviesViewModel::handleIntents)
     }) { innerPadding ->
 
-        Column(modifier = Modifier
-            .padding(innerPadding)
-            .clickable(indication = null, interactionSource = null) { keyboardController?.hide() }) {
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .clickable(
+                    indication = null,
+                    interactionSource = null
+                ) { keyboardController?.hide() }) {
 
             LoadingBar((movies.loadState.refresh is LoadState.Loading) && searchText.value.isNotEmpty())
 
-            when(movies.itemCount){
+            when (movies.itemCount) {
                 0 -> EmptyScreen()
                 else ->
                     LazyVerticalGrid(
@@ -98,9 +94,20 @@ fun SearchScreen(navController: NavHostController, moviesViewModel: MoviesViewMo
             moviesViewModel.handleIntents(MoviesIntents.NavigateBack)
         }
         LaunchedEffect(Unit) {
+            snapshotFlow { movies.loadState }
+                .distinctUntilChanged()
+                .collectLatest { loadStates ->
+                    val refreshError = (loadStates.refresh as? LoadState.Error)?.error
+                    val appendError = (loadStates.append as? LoadState.Error)?.error
+                    val error = refreshError ?: appendError
+                    error?.let { moviesViewModel.handleIntents(MoviesIntents.OnErrorOccurred(exception = it)) }
+                }
+        }
+        LaunchedEffect(Unit) {
             moviesViewModel.events.collectLatest { res ->
                 when (res) {
                     is MoviesEvents.ErrorOccurred -> {
+                        keyboardController?.hide()
                         showSnackBar(snackBarHostState, res.error) {
                             moviesViewModel.handleIntents(MoviesIntents.RetryLoadingData)
                         }
@@ -153,28 +160,4 @@ private fun SearchTopBar(searchText: MutableState<String>, handleIntents: (Movie
             }
         }
     )
-}
-
-
-@Composable
-private fun MovieItem(movie: MoviesModel.MovieItem, onMovieClick: (MoviesModel.MovieItem) -> Unit) {
-    Card(
-        modifier = Modifier.padding(5.dp), shape = RoundedCornerShape(5)
-    ) {
-        Column(modifier = Modifier
-            .clickable { onMovieClick(movie) }
-            .padding(10.dp),
-            verticalArrangement = Arrangement.spacedBy(5.dp)) {
-            AsyncImage(
-                "${Constants.BASE_IMAGE_URL}${movie.posterPath}",
-                "",
-                contentScale = ContentScale.FillWidth,
-                placeholder = painterResource(R.drawable.image_loading),
-                error = painterResource(R.drawable.no_image),
-                modifier = Modifier.height(200.dp)
-            )
-            Text(movie.title, minLines = 1, maxLines = 1, overflow = TextOverflow.Clip)
-            Text("Date: ${movie.releaseDate}", maxLines = 1)
-        }
-    }
 }

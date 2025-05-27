@@ -6,6 +6,5 @@ import javax.inject.Inject
 class FetchPagedMoviesUseCase @Inject constructor(
     private val retroRepository: RetroRepository
 ) {
-    operator fun invoke(onError: (Exception) -> Unit) =
-        retroRepository.getPopularMovies(onError)
+    operator fun invoke() = retroRepository.getPopularMovies()
 }

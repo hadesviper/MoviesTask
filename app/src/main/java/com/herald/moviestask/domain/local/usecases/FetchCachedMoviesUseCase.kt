@@ -13,7 +13,7 @@ class FetchCachedMoviesUseCase @Inject constructor(
     operator fun invoke(): Flow<Resource<MoviesModel>> = flow {
         emit(Resource.Loading())
         try {
-            emit(Resource.Success(cacheRepository.getTrendingMovies()))
+            emit(Resource.Success(cacheRepository.getTopRatedMovies()))
         } catch (e: Exception) {
             emit(Resource.Error(e))
         }

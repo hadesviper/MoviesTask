@@ -21,7 +21,7 @@ interface RetroService {
     ): MoviesDTO
 
     @GET("movie/top_rated")
-    suspend fun getTrendingMovies(
+    suspend fun getTopRatedMovies(
         @Query("page") page: Int,
         @Query("include_adult") includeAdult: Boolean = false,
         @Header("accept") accept: String = "application/json",

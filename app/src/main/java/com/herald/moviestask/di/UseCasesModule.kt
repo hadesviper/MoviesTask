@@ -9,7 +9,7 @@ import com.herald.moviestask.domain.remote.repository.RetroRepository
 import com.herald.moviestask.domain.remote.usecases.FetchMovieDetailsUseCase
 import com.herald.moviestask.domain.remote.usecases.FetchMovieSearchUseCase
 import com.herald.moviestask.domain.remote.usecases.FetchPagedMoviesUseCase
-import com.herald.moviestask.domain.remote.usecases.FetchTrendingMovies
+import com.herald.moviestask.domain.remote.usecases.FetchTopRatedMovies
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,7 +27,7 @@ object UseCasesModule {
             fetchPagedMoviesUseCase = FetchPagedMoviesUseCase(retroRepository),
             fetchMovieSearchUseCase = FetchMovieSearchUseCase(retroRepository),
             fetchMovieDetailsUseCase = FetchMovieDetailsUseCase(retroRepository),
-            fetchTrendingMovies = FetchTrendingMovies(retroRepository),
+            fetchTopRatedMovies = FetchTopRatedMovies(retroRepository),
             deleteCacheUseCase = DeleteCacheUseCase(cachingRepo),
             fetchCachedMoviesUseCase = FetchCachedMoviesUseCase(cachingRepo),
             cacheMoviesUseCase = CacheMoviesUseCase(cachingRepo)

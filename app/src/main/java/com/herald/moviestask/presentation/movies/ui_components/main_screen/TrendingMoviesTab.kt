@@ -17,18 +17,17 @@ import com.herald.moviestask.presentation.movies.MoviesViewModel
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
-fun TrendingMoviesTab(
+fun TopRatedMoviesTab(
     moviesViewModel: MoviesViewModel,
     listState: LazyGridState,
     onMovieClick: (MovieItem) -> Unit,
 ) {
-    val state = moviesViewModel.trendingMoviesStates.collectAsState()
+    val state = moviesViewModel.topRatedMoviesStates.collectAsState()
     Column {
         when{
-            state.value.error != null -> EmptyScreen()
+            state.value.movies?.movieListItems.isNullOrEmpty() -> EmptyScreen()
             state.value.isLoading -> LoadingBar(true)
             state.value.movies != null -> {
-
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2), state = listState
                 ) {
@@ -45,11 +44,11 @@ fun TrendingMoviesTab(
     }
     LaunchedEffect(Unit) {
         if (state.value.movies == null) {
-            moviesViewModel.handleIntents(MoviesIntents.LoadTrendingMovies(1))
+            moviesViewModel.handleIntents(MoviesIntents.LoadTopRatedMovies(1))
         }
         moviesViewModel.events.collectLatest {
             if (it is MoviesEvents.Retry) {
-                moviesViewModel.handleIntents(MoviesIntents.LoadTrendingMovies(1))
+                moviesViewModel.handleIntents(MoviesIntents.LoadTopRatedMovies(1))
             }
         }
     }
