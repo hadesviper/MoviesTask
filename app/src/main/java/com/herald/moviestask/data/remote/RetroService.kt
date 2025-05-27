@@ -20,6 +20,14 @@ interface RetroService {
         @Header("Cache-Control") cacheControl: String = "public, max-age=$CACHE_DURATION"
     ): MoviesDTO
 
+    @GET("movie/top_rated")
+    suspend fun getTrendingMovies(
+        @Query("page") page: Int,
+        @Query("include_adult") includeAdult: Boolean = false,
+        @Header("accept") accept: String = "application/json",
+        @Header("Authorization") authorization: String = Constants.MY_KEY,
+    ): MoviesDTO
+
     @GET("search/movie")
     suspend fun searchMovies(
         @Query("page") page: Int,

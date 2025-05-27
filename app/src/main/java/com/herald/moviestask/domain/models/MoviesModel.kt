@@ -1,8 +1,7 @@
-package com.herald.moviestask.domain.remote.models
+package com.herald.moviestask.domain.models
 
 data class MoviesModel(
-    val page: Int,
-    val movieListItem: List<MovieItem>,
+    val movieListItems: List<MovieItem>,
 ) {
     data class MovieItem(
         val id: Int,

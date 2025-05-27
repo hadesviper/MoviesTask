@@ -12,8 +12,8 @@ import androidx.navigation.toRoute
 import com.herald.moviestask.presentation.components.Screens
 import com.herald.moviestask.presentation.movies.MoviesViewModel
 import com.herald.moviestask.presentation.movies.ui_components.DetailsScreen
-import com.herald.moviestask.presentation.movies.ui_components.MainScreen
 import com.herald.moviestask.presentation.movies.ui_components.SearchScreen
+import com.herald.moviestask.presentation.movies.ui_components.main_screen.MainScreen
 import com.herald.moviestask.presentation.ui.theme.MoviesTaskTheme
 import dagger.hilt.android.AndroidEntryPoint
 

@@ -2,7 +2,7 @@ package com.herald.moviestask.data.remote.dto
 
 
 import com.google.gson.annotations.SerializedName
-import com.herald.moviestask.domain.remote.models.MoviesModel
+import com.herald.moviestask.domain.models.MoviesModel
 import java.util.Locale
 
 data class MoviesDTO(
@@ -48,8 +48,7 @@ data class MoviesDTO(
 
     fun toMovies():MoviesModel{
         return MoviesModel(
-            page = page,
-            movieListItem = results.map {
+            movieListItems = results.map {
                 MoviesModel.MovieItem(
                     id = it.id,
                     posterPath = it.posterPath,

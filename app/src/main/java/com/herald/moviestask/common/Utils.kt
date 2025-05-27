@@ -17,8 +17,8 @@ object Utils {
         }
     }
 
-    suspend fun showSnackbar( snackbarHostState: SnackbarHostState, message: String = "error", actionPerformed: () -> Unit ) {
-        val result = snackbarHostState.showSnackbar(
+    suspend fun showSnackBar(snackBarHostState: SnackbarHostState, message: String = "error", actionPerformed: () -> Unit ) {
+        val result = snackBarHostState.showSnackbar(
             message = message,
             actionLabel = "Retry",
         )
