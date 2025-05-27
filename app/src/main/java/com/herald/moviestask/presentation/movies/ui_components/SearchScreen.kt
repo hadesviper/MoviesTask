@@ -172,9 +172,6 @@ private fun SearchTextField(
         onValueChange = onQueryChange,
         placeholder = { Text(hint) },
         singleLine = true,
-        leadingIcon = {
-            Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
-        },
         trailingIcon = {
             AnimatedVisibility(
                 query.isNotEmpty(),
