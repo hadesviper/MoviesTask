@@ -1,4 +1,4 @@
-package com.herald.moviestask.presentation.ui.theme
+package com.herald.moviestask.presentation.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
