@@ -5,8 +5,8 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.herald.moviestask.data.remote.pagingsource.MoviePagingSource
 import com.herald.moviestask.data.remote.pagingsource.SearchingPagingSource
-import com.herald.moviestask.domain.remote.models.MovieModel
-import com.herald.moviestask.domain.remote.models.MoviesModel
+import com.herald.moviestask.domain.models.MovieModel
+import com.herald.moviestask.domain.models.MoviesModel
 import com.herald.moviestask.domain.remote.repository.RetroRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -39,5 +39,9 @@ class RetroRepoImpl @Inject constructor(
 
     override suspend fun getMovieDetails(id: Int): MovieModel {
         return retroService.getMovieDetails(id).toMovieModel()
+    }
+
+    override suspend fun getTrendingMovies(page: Int): MoviesModel {
+        return retroService.getTrendingMovies(page).toMovies()
     }
 }

@@ -6,10 +6,10 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.herald.moviestask.common.Resource
 import com.herald.moviestask.common.Utils.getErrorMessage
-import com.herald.moviestask.domain.remote.models.MoviesModel
-import com.herald.moviestask.domain.remote.usecases.FetchMovieDetailsUseCase
-import com.herald.moviestask.domain.remote.usecases.FetchMovieSearchUseCase
-import com.herald.moviestask.domain.remote.usecases.FetchPagedMoviesUseCase
+import com.herald.moviestask.domain.models.AllUsesCases
+import com.herald.moviestask.domain.models.MoviesModel
+import com.herald.moviestask.presentation.movies.states.MovieDetailsStates
+import com.herald.moviestask.presentation.movies.states.MovieTrendingStates
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -26,75 +26,106 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
+@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 class MoviesViewModel @Inject constructor(
-    fetchPagedMoviesUseCase: FetchPagedMoviesUseCase,
-    fetchMovieSearchUseCase: FetchMovieSearchUseCase,
-    private val fetchMovieDetailsUseCase: FetchMovieDetailsUseCase
+    private val useCases: AllUsesCases
 ) : ViewModel() {
 
-    private val _singleMovieStates = MutableStateFlow(SingleMovieStates())
-    val singleMovieStates = _singleMovieStates.asStateFlow()
+    private val _movieDetailsStates = MutableStateFlow(MovieDetailsStates())
+    val movieDetailsStates = _movieDetailsStates.asStateFlow()
+
+    private val _trendingMoviesStates = MutableStateFlow(MovieTrendingStates())
+    val trendingMoviesStates = _trendingMoviesStates.asStateFlow()
 
     private val _events = MutableSharedFlow<MoviesEvents>()
     val events = _events.asSharedFlow()
 
-    val movies = fetchPagedMoviesUseCase(onError = { errorHandling(it) }).cachedIn(viewModelScope)
+    val movies = useCases.fetchPagedMoviesUseCase(onError = { triggerEvent(MoviesEvents.ErrorOccurred(getErrorMessage(it))) }).cachedIn(viewModelScope)
 
     private val _searchQueryState = MutableStateFlow("")
 
-    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     val searchResult: Flow<PagingData<MoviesModel.MovieItem>> = _searchQueryState
         .debounce(1000)
         .distinctUntilChanged()
         .flatMapLatest { query ->
-            fetchMovieSearchUseCase(query, onError = { errorHandling(it) })
+            useCases.fetchMovieSearchUseCase(query, onError = { triggerEvent(MoviesEvents.ErrorOccurred(getErrorMessage(it))) })
         }
         .cachedIn(viewModelScope)
 
 
     fun handleIntents(intent: MoviesIntents) {
         when (intent) {
-            is MoviesIntents.OpenMovieDetails -> navigateToMovieDetails(intent.id)
-            is MoviesIntents.RetryLoadingData -> retryLoadingData()
-            is MoviesIntents.LoadMovieDetails -> loadMovieDetails(intent.id)
-            is MoviesIntents.OpenMovieSearch -> navigateToMovieSearch()
-            is MoviesIntents.NavigateBack -> navigateBack()
-            is MoviesIntents.OnSearchQueryChanged -> onSearchQueryChanged(intent.query)
+            is MoviesIntents.OpenMovieDetails       -> triggerEvent(MoviesEvents.NavigateToMovieDetails(intent.id))
+            is MoviesIntents.RetryLoadingData       -> triggerEvent(MoviesEvents.Retry)
+            is MoviesIntents.OpenMovieSearch        -> triggerEvent(MoviesEvents.NavigateToMovieSearch)
+            is MoviesIntents.NavigateBack           -> triggerEvent(MoviesEvents.NavigateBack)
+            is MoviesIntents.OnSearchQueryChanged   -> onSearchQueryChanged(intent.query)
+            is MoviesIntents.LoadMovieDetails       -> loadMovieDetails(intent.id)
+            is MoviesIntents.LoadTrendingMovies     -> loadCachedTrendingMovies()
         }
     }
 
 
     private fun loadMovieDetails(id: Int) = viewModelScope.launch {
-        fetchMovieDetailsUseCase(id).collect { resource ->
+        useCases.fetchMovieDetailsUseCase(id).collect { resource ->
             when (resource) {
-                is Resource.Loading -> _singleMovieStates.update { SingleMovieStates(isLoading = true) }
-                is Resource.Success -> _singleMovieStates.update { SingleMovieStates(movie = resource.data) }
+                is Resource.Loading -> _movieDetailsStates.update { MovieDetailsStates(isLoading = true) }
+                is Resource.Success -> _movieDetailsStates.update { MovieDetailsStates(movie = resource.data) }
                 is Resource.Error -> {
-                    _singleMovieStates.update { SingleMovieStates(error = getErrorMessage(resource.error)) }
-                    _events.emit(MoviesEvents.ErrorOccurred(getErrorMessage(resource.error)))
+                    getErrorMessage(resource.error).apply {
+                        _movieDetailsStates.update { MovieDetailsStates(error = this) }
+                        triggerEvent(MoviesEvents.ErrorOccurred(this))
+                    }
                 }
             }
         }
     }
 
-    private fun errorHandling(e: Exception) = viewModelScope.launch {
-        _events.emit(MoviesEvents.ErrorOccurred(getErrorMessage(e)))
+    private fun loadCachedTrendingMovies(page: Int = 1) = viewModelScope.launch {
+        useCases.fetchCachedMoviesUseCase().collect { resource ->
+            when (resource) {
+                is Resource.Loading -> _trendingMoviesStates.update { it.copy(isLoading = true, error = null)
+                }
+                is Resource.Success -> {
+                    if (!resource.data?.movieListItems.isNullOrEmpty()) {
+                        _trendingMoviesStates.update { MovieTrendingStates(movies = resource.data) }
+                    }
+                    loadRemoteTrendingMovies(page)
+                }
+                is Resource.Error -> {
+                    getErrorMessage(resource.error).apply {
+                        _trendingMoviesStates.update { it.copy(isLoading = false, error = this) }
+                        triggerEvent(MoviesEvents.ErrorOccurred(this))
+                    }
+                }
+            }
+        }
+    }
+    private fun loadRemoteTrendingMovies(page: Int = 1) = viewModelScope.launch {
+        useCases.fetchTrendingMovies(page).collect { resource ->
+            when (resource) {
+                is Resource.Loading -> {
+                    val isCachedMoviesEmpty = _trendingMoviesStates.value.movies?.movieListItems.isNullOrEmpty()
+                    _trendingMoviesStates.update { it.copy(isLoading = isCachedMoviesEmpty ,error = null) }
+                }
+                is Resource.Success -> {
+                    _trendingMoviesStates.update { MovieTrendingStates(movies = resource.data) }
+                    useCases.deleteCacheUseCase()
+                    useCases.cacheMoviesUseCase(resource.data?.movieListItems ?: emptyList())
+                }
+                is Resource.Error -> {
+                    getErrorMessage(resource.error).apply {
+                        _trendingMoviesStates.update { it.copy(isLoading = false, error = this) }
+                        triggerEvent(MoviesEvents.ErrorOccurred(this))
+                    }
+                }
+            }
+        }
+    }
+    private fun triggerEvent(event: MoviesEvents) = viewModelScope.launch {
+        _events.emit(event)
     }
 
-    private fun retryLoadingData() = viewModelScope.launch {
-        _events.emit(MoviesEvents.Retry)
-    }
-
-    private fun navigateToMovieDetails(id: Int) = viewModelScope.launch {
-        _events.emit(MoviesEvents.NavigateToMovieDetails(id))
-    }
-
-    private fun navigateToMovieSearch() = viewModelScope.launch {
-        _events.emit(MoviesEvents.NavigateToMovieSearch)
-    }
-    private fun navigateBack() = viewModelScope.launch {
-        _events.emit(MoviesEvents.NavigateBack)
-    }
     private fun onSearchQueryChanged(query: String) = viewModelScope.launch {
         _searchQueryState.update { query }
     }

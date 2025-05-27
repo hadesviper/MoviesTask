@@ -1,4 +1,4 @@
-package com.herald.moviestask.domain.remote.models
+package com.herald.moviestask.domain.models
 
 
 data class MovieModel(

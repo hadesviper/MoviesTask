@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.herald.moviestask.data.remote.RetroService
-import com.herald.moviestask.domain.remote.models.MoviesModel
+import com.herald.moviestask.domain.models.MoviesModel
 
 class MoviePagingSource(
     private val retroService: RetroService,
@@ -15,7 +15,7 @@ class MoviePagingSource(
         val page = params.key ?: 1
         return try {
             val response = retroService.getPopularMovies(page)
-            val movieData = response.toMovies().movieListItem
+            val movieData = response.toMovies().movieListItems
             Log.i("TAG", "load: items page: $page ")
             LoadResult.Page(
                 data = movieData,

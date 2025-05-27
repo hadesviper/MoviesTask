@@ -2,7 +2,7 @@ package com.herald.moviestask.data.remote.dto
 
 
 import com.google.gson.annotations.SerializedName
-import com.herald.moviestask.domain.remote.models.MovieModel
+import com.herald.moviestask.domain.models.MovieModel
 import java.util.Locale
 
 data class MovieDTO(

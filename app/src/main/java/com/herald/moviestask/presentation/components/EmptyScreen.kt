@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun EmptyScreen(isVisible:Boolean = true) {
+fun EmptyScreen() {
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -28,7 +28,7 @@ fun EmptyScreen(isVisible:Boolean = true) {
             contentDescription = "Warning",
         )
         Text(
-            text = "No items found",
+            text = "It's Lonely In Here",
             color = MaterialTheme.colorScheme.primary,
             fontSize = 20.sp,
         )

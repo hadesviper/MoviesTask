@@ -2,7 +2,6 @@ package com.herald.moviestask.presentation.movies.ui_components
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -45,12 +44,13 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.herald.moviestask.R
 import com.herald.moviestask.common.Constants
-import com.herald.moviestask.common.Utils.showSnackbar
-import com.herald.moviestask.domain.remote.models.MovieModel
+import com.herald.moviestask.common.Utils.showSnackBar
+import com.herald.moviestask.domain.models.MovieModel
 import com.herald.moviestask.presentation.components.LoadingBar
 import com.herald.moviestask.presentation.components.TextWithIcon
 import com.herald.moviestask.presentation.movies.MoviesEvents
@@ -64,7 +64,7 @@ fun DetailsScreen(
     movieID: Int,
     moviesViewModel: MoviesViewModel
 ) {
-    val states by moviesViewModel.singleMovieStates.collectAsState()
+    val states by moviesViewModel.movieDetailsStates.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -94,7 +94,7 @@ fun DetailsScreen(
         moviesViewModel.events.collectLatest { res ->
             when (res) {
                 is MoviesEvents.ErrorOccurred -> {
-                    showSnackbar(snackbarHostState, res.error) {
+                    showSnackBar(snackbarHostState, res.error) {
                         moviesViewModel.handleIntents(MoviesIntents.LoadMovieDetails(movieID))
                     }
                 }
@@ -220,7 +220,7 @@ private fun openYoutubeLink(context: Context, youtubeID: String) {
         context.startActivity(
             Intent(
                 Intent.ACTION_VIEW,
-                Uri.parse("http://m.youtube.com/watch?v=$youtubeID")
+                "http://m.youtube.com/watch?v=$youtubeID".toUri()
             )
         )
     }

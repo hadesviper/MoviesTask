@@ -4,7 +4,8 @@ import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.herald.moviestask.data.remote.RetroService
-import com.herald.moviestask.domain.remote.models.MoviesModel
+import com.herald.moviestask.data.remote.dto.MoviesDTO
+import com.herald.moviestask.domain.models.MoviesModel
 
 class SearchingPagingSource(
     private val retroService: RetroService,
@@ -15,8 +16,14 @@ class SearchingPagingSource(
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MoviesModel.MovieItem> {
         val page = params.key ?: 1
         return try {
-            val response = retroService.searchMovies(page,query)
-            val movieData = response.toMovies().movieListItem
+            val response = if (query.isNotEmpty()){
+                retroService.searchMovies(page,query)}
+            else {
+                MoviesDTO(
+                    page = 0, results = listOf(), totalPages = 0, totalResults = 0
+                )
+            }
+            val movieData = response.toMovies().movieListItems
             Log.i("TAG", "load: items page: $page ")
             LoadResult.Page(
                 data = movieData,
