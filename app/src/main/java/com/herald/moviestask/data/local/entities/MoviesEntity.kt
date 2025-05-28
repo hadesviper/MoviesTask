@@ -2,7 +2,6 @@ package com.herald.moviestask.data.local.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.herald.moviestask.domain.models.MoviesModel
 
 @Entity(tableName = "Movies")
 data class MoviesEntity(
@@ -13,14 +12,4 @@ data class MoviesEntity(
     val releaseDate: String,
     val title: String,
     val voteAverage: String
-) {
-    fun toMoviesModel(): MoviesModel.MovieItem {
-        return MoviesModel.MovieItem(
-            id = id,
-            posterPath = posterPath,
-            releaseDate = releaseDate,
-            title = title,
-            voteAverage = voteAverage
-        )
-    }
-}
+)

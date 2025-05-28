@@ -1,5 +1,8 @@
 package com.herald.moviestask.presentation.movies.ui_components.main_screen
 
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,11 +22,14 @@ import com.herald.moviestask.presentation.movies.MoviesViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun ViewPagerWithTabs(
     moviesViewModel: MoviesViewModel,
     listStateTopRated: LazyGridState,
     listStatePopular: LazyGridState,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     tabs: Array<TabItem>,
     pagerState: PagerState,
     coroutineScope: CoroutineScope,
@@ -58,11 +64,15 @@ fun ViewPagerWithTabs(
                 TabItem.Popular -> PopularMoviesTab(
                     moviesViewModel,
                     listStatePopular,
+                    sharedTransitionScope,
+                    animatedContentScope,
                     onMovieClick
                 )
                 TabItem.TopRated -> TopRatedMoviesTab(
                     moviesViewModel,
                     listStateTopRated,
+                    sharedTransitionScope,
+                    animatedContentScope,
                     onMovieClick
                 )
             }

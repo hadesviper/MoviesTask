@@ -1,5 +1,8 @@
 package com.herald.moviestask.presentation.movies.ui_components.main_screen
 
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -16,16 +19,20 @@ import androidx.compose.ui.unit.dp
 import com.herald.moviestask.domain.models.MoviesModel.MovieItem
 import com.herald.moviestask.presentation.components.EmptyScreen
 import com.herald.moviestask.presentation.components.LoadingBar
+import com.herald.moviestask.presentation.components.MovieItem
 import com.herald.moviestask.presentation.movies.MoviesEvents
 import com.herald.moviestask.presentation.movies.MoviesIntents
 import com.herald.moviestask.presentation.movies.MoviesViewModel
 import kotlinx.coroutines.flow.collectLatest
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun TopRatedMoviesTab(
     moviesViewModel: MoviesViewModel,
     listState: LazyGridState,
-    onMovieClick: (MovieItem) -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
+    onMovieClick: (MovieItem) -> Unit
 ) {
     val state = moviesViewModel.topRatedMoviesState.collectAsState()
     Column {
@@ -38,9 +45,12 @@ fun TopRatedMoviesTab(
                 ) {
                     items(state.value.movies!!.movieListItems, contentType = { MovieItem::class })
                     {
-                        MovieItem(it) { movie ->
-                            onMovieClick(movie)
-                        }
+                        MovieItem(
+                            it,
+                            sharedTransitionScope,
+                            animatedContentScope,
+                            onMovieClick
+                        )
                     }
                     item(span = { GridItemSpan(maxLineSpan) }){
                         Text(modifier = Modifier.padding(10.dp),text = "This tab loads the first page only unlike the other tab, this one is for caching demonstration with room and it applies the caching flow mentioned in the task description, the other one uses paging 3 in order to load more pages and it uses the regular http request caching")

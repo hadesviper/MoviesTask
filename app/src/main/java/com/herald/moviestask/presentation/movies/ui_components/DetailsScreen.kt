@@ -2,6 +2,10 @@ package com.herald.moviestask.presentation.movies.ui_components
 
 import android.content.Context
 import android.content.Intent
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -27,7 +31,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -56,48 +59,59 @@ import com.herald.moviestask.presentation.movies.MoviesIntents
 import com.herald.moviestask.presentation.movies.MoviesViewModel
 import kotlinx.coroutines.flow.collectLatest
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun DetailsScreen(
     movieID: Int,
     moviesViewModel: MoviesViewModel,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     navigateUp: () -> Unit
 ) {
     val states by moviesViewModel.movieDetailsState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        modifier = Modifier.fillMaxSize(),
-        topBar = { DetailsTopAppBar { moviesViewModel.handleIntents(MoviesIntents.NavigateBack) } }
-    ) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding)) {
+    with(sharedTransitionScope) {
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            modifier = Modifier
+                .fillMaxSize()
+                .sharedElement(
+                    sharedTransitionScope.rememberSharedContentState(key = movieID),
+                    animatedVisibilityScope = animatedContentScope
+                ),
+            topBar = { DetailsTopAppBar { moviesViewModel.handleIntents(MoviesIntents.NavigateBack) } }
+        ) { innerPadding ->
+            Column(modifier = Modifier.padding(innerPadding)) {
 
-            LoadingBar(states.isLoading)
+                LoadingBar(states.isLoading)
 
-            states.movie?.let { movie ->
-                val imageURL = Constants.BASE_BACK_IMAGE_URL+movie.backdropPath
-                AsyncImage(
-                    imageURL,
-                    "Background Image ${movie.title}",
-                    contentScale = ContentScale.FillWidth,
-                    placeholder = painterResource(R.drawable.image_loading),
-                    error = painterResource(R.drawable.no_image),
-                    modifier = Modifier.fillMaxWidth().height(200.dp)
-                )
-                MovieDetails(movie)
+                states.movie?.let { movie ->
+                    val imageURL = Constants.BASE_BACK_IMAGE_URL + movie.backdropPath
+                    AsyncImage(
+                        imageURL,
+                        "Background Image ${movie.title}",
+                        contentScale = ContentScale.FillWidth,
+                        placeholder = painterResource(R.drawable.image_loading),
+                        error = painterResource(R.drawable.no_image),
+                        modifier = Modifier.fillMaxWidth().height(200.dp)
+                    )
+                    MovieDetails(animatedContentScope, movie)
+                }
             }
         }
-    }
-    LaunchedEffect(Unit) {
-        moviesViewModel.handleIntents(MoviesIntents.LoadMovieDetails(movieID))
-        moviesViewModel.events.collectLatest { res ->
-            when (res) {
-                is MoviesEvents.ErrorOccurred -> {
-                    showRetrySnackbar(snackbarHostState, res.error) {
-                        moviesViewModel.handleIntents(MoviesIntents.LoadMovieDetails(movieID))
+        LaunchedEffect(Unit) {
+            moviesViewModel.handleIntents(MoviesIntents.LoadMovieDetails(movieID))
+            moviesViewModel.events.collectLatest { res ->
+                when (res) {
+                    is MoviesEvents.ErrorOccurred -> {
+                        showRetrySnackbar(snackbarHostState, res.error) {
+                            moviesViewModel.handleIntents(MoviesIntents.LoadMovieDetails(movieID))
+                        }
                     }
+
+                    is MoviesEvents.NavigateBack -> navigateUp()
+                    else -> Unit
                 }
-                is MoviesEvents.NavigateBack -> navigateUp()
-                else -> Unit
             }
         }
     }
@@ -107,7 +121,6 @@ fun DetailsScreen(
 @Composable
 private fun DetailsTopAppBar(goBack: ()->Unit) {
     TopAppBar(
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         title = { Text("Movie Details") },
         navigationIcon = {
             IconButton(onClick = { goBack()})
@@ -119,7 +132,10 @@ private fun DetailsTopAppBar(goBack: ()->Unit) {
 }
 
 @Composable
-private fun MovieDetails(movie: MovieModel) {
+private fun MovieDetails(
+    animatedContentScope: AnimatedContentScope,
+    movie: MovieModel
+) {
     Column(
         modifier = Modifier.padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp)
@@ -148,12 +164,16 @@ private fun MovieDetails(movie: MovieModel) {
 
         BasicDataRow(movie = movie)
 
-        Text(
-            text = movie.overview,
-            style = TextStyle(fontWeight = FontWeight.Normal),
-            fontSize = 16.sp,
-            modifier = Modifier.verticalScroll(rememberScrollState())
-        )
+        AnimatedVisibility(
+            !animatedContentScope.transition.isRunning,
+        ) {
+            Text(
+                text = movie.overview,
+                style = TextStyle(fontWeight = FontWeight.Normal),
+                fontSize = 16.sp,
+                modifier = Modifier.verticalScroll(rememberScrollState())
+        )}
+
     }
 }
 
