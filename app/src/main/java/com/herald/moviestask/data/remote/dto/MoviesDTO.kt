@@ -2,8 +2,6 @@ package com.herald.moviestask.data.remote.dto
 
 
 import com.google.gson.annotations.SerializedName
-import com.herald.moviestask.domain.models.MoviesModel
-import java.util.Locale
 
 data class MoviesDTO(
     @SerializedName("page")
@@ -45,18 +43,4 @@ data class MoviesDTO(
         @SerializedName("vote_count")
         val voteCount: Long
     )
-
-    fun toMovies():MoviesModel{
-        return MoviesModel(
-            movieListItems = results.map {
-                MoviesModel.MovieItem(
-                    id = it.id,
-                    posterPath = it.posterPath,
-                    releaseDate = it.releaseDate.split("-")[0].ifEmpty { "----" },
-                    title = it.title,
-                    voteAverage = String.format(Locale.ENGLISH,"%.1f",it.voteAverage)
-                )
-            },
-        )
-    }
 }

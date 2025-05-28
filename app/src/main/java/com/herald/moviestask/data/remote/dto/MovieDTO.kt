@@ -2,8 +2,6 @@ package com.herald.moviestask.data.remote.dto
 
 
 import com.google.gson.annotations.SerializedName
-import com.herald.moviestask.domain.models.MovieModel
-import java.util.Locale
 
 data class MovieDTO(
     @SerializedName("adult")
@@ -29,7 +27,7 @@ data class MovieDTO(
     @SerializedName("original_title")
     val originalTitle: String? = "",
     @SerializedName("overview")
-    val overview: String? = "",
+    val overview: String = "",
     @SerializedName("popularity")
     val popularity: Double? = 0.0,
     @SerializedName("poster_path")
@@ -120,20 +118,6 @@ data class MovieDTO(
             val size: Int? = 0,
             @SerializedName("type")
             val type: String? = ""
-        )
-    }
-    fun toMovieModel(): MovieModel {
-        return MovieModel(
-            backdropPath = backdropPath ?: "",
-            genres = genres?.map { it?.name ?: "" } ?: emptyList(),
-            id = id,
-            overview = overview ?: "",
-            releaseDate = releaseDate.split("-")[0].ifEmpty { "----" },
-            runtime = runtime ?: 0,
-            tagline = tagline ?: "",
-            title = title ?: "",
-            ytTrailer = videos?.results?.find { it?.type == "Trailer" }?.key ?: "",
-            voteAverage =  String.format(Locale.ENGLISH,"%.1f",voteAverage)
         )
     }
 }

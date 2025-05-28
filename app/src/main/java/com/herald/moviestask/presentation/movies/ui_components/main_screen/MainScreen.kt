@@ -1,5 +1,8 @@
 package com.herald.moviestask.presentation.movies.ui_components.main_screen
 
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -26,12 +29,14 @@ import com.herald.moviestask.presentation.movies.MoviesIntents
 import com.herald.moviestask.presentation.movies.MoviesViewModel
 import kotlinx.coroutines.flow.collectLatest
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun MainScreen(
     moviesViewModel: MoviesViewModel,
-    navigateToSearch: ()->Unit,
-    navigateToDetails: (Int)->Unit
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
+    navigateToSearch: () -> Unit,
+    navigateToDetails: (Int) -> Unit
 ) {
     val listStatePopular = rememberLazyGridState()
     val listStateTopRated = rememberLazyGridState()
@@ -59,6 +64,8 @@ fun MainScreen(
                 moviesViewModel,
                 listStateTopRated,
                 listStatePopular,
+                sharedTransitionScope,
+                animatedContentScope,
                 tabs,
                 pagerState,
                 coroutineScope
