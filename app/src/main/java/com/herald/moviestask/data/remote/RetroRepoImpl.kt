@@ -3,6 +3,8 @@ package com.herald.moviestask.data.remote
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import com.herald.moviestask.data.remote.mappers.toMovieModel
+import com.herald.moviestask.data.remote.mappers.toMovies
 import com.herald.moviestask.data.remote.pagingsource.MoviePagingSource
 import com.herald.moviestask.data.remote.pagingsource.SearchingPagingSource
 import com.herald.moviestask.domain.models.MovieModel

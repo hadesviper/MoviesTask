@@ -1,7 +1,10 @@
 package com.herald.moviestask.presentation.movies.ui_components
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -10,7 +13,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -20,7 +22,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,20 +48,23 @@ import com.herald.moviestask.common.Utils.showRetrySnackbar
 import com.herald.moviestask.domain.models.MoviesModel
 import com.herald.moviestask.presentation.components.EmptyScreen
 import com.herald.moviestask.presentation.components.LoadingBar
+import com.herald.moviestask.presentation.components.MovieItem
 import com.herald.moviestask.presentation.movies.MoviesEvents
 import com.herald.moviestask.presentation.movies.MoviesIntents
 import com.herald.moviestask.presentation.movies.MoviesViewModel
-import com.herald.moviestask.presentation.movies.ui_components.main_screen.MovieItem
 import kotlinx.coroutines.flow.collectLatest
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun SearchScreen(
     moviesViewModel: MoviesViewModel,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     navigateUp: () -> Unit,
-    navigateToDetails: (Int)->Unit
+    navigateToDetails: (Int) -> Unit
 ) {
     val movies = moviesViewModel.searchResult.collectAsLazyPagingItems()
-    var searchText = remember { mutableStateOf("") }
+    val searchText = remember { mutableStateOf("") }
     val listState = rememberLazyGridState()
     val snackbarHostState = remember { SnackbarHostState() }
     val onMovieClick: (MoviesModel.MovieItem) -> Unit = remember { { moviesViewModel.handleIntents(MoviesIntents.OpenMovieDetails(it.id)) } }
@@ -90,9 +94,7 @@ fun SearchScreen(
                         items(movies.itemCount, contentType = { MoviesModel.MovieItem::class })
                         { index ->
                             movies[index]?.let {
-                                MovieItem(it) { movie ->
-                                    onMovieClick(movie)
-                                }
+                                MovieItem(it, sharedTransitionScope, animatedContentScope, onMovieClick)
                             }
                         }
                         item(span = { GridItemSpan(2) }) {
@@ -137,18 +139,19 @@ fun SearchScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SearchTopBar(searchText: MutableState<String>, handleIntents: (MoviesIntents) -> Unit) {
-    TopAppBar(modifier = Modifier.padding(top = 16.dp), title =
-        {
-            SearchTextField(
-                query = searchText.value,
-                onQueryChange = {
-                    searchText.value = it
-                    handleIntents(MoviesIntents.OnSearchQueryChanged(searchText.value))
-                },
-                onClear = {
-                    searchText.value = ""
-                    handleIntents(MoviesIntents.OnSearchQueryChanged(searchText.value))
-                }
+    TopAppBar(
+        modifier = Modifier.padding(top = 16.dp),
+        title =
+            {
+                SearchTextField(
+                    query = searchText.value,
+                    onQueryChange = {
+                        searchText.value = it
+                        handleIntents(MoviesIntents.OnSearchQueryChanged(searchText.value)) },
+                    onClear = {
+                        searchText.value = ""
+                        handleIntents(MoviesIntents.OnSearchQueryChanged(searchText.value))
+                    }
             )
         }, navigationIcon = {
             IconButton(onClick = { handleIntents(MoviesIntents.NavigateBack) })
@@ -192,7 +195,6 @@ private fun SearchTextField(
         ),
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp)
             .padding(horizontal = 16.dp)
     )
 }

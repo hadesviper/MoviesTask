@@ -1,5 +1,8 @@
 package com.herald.moviestask.presentation.movies.ui_components.main_screen
 
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -12,15 +15,19 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.herald.moviestask.domain.models.MoviesModel.MovieItem
 import com.herald.moviestask.presentation.components.EmptyScreen
 import com.herald.moviestask.presentation.components.LoadingBar
+import com.herald.moviestask.presentation.components.MovieItem
 import com.herald.moviestask.presentation.movies.MoviesEvents
 import com.herald.moviestask.presentation.movies.MoviesIntents
 import com.herald.moviestask.presentation.movies.MoviesViewModel
 import kotlinx.coroutines.flow.collectLatest
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun PopularMoviesTab(
     moviesViewModel: MoviesViewModel,
     listState: LazyGridState,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     onMovieClick: (MovieItem) -> Unit
 ) {
     val movies = moviesViewModel.movies.collectAsLazyPagingItems()
@@ -33,7 +40,11 @@ fun PopularMoviesTab(
             items(movies.itemCount, contentType = { MovieItem::class })
             { index ->
                 movies[index]?.let {
-                    MovieItem(it,onMovieClick)
+                    MovieItem(it,
+                        sharedTransitionScope,
+                        animatedContentScope,
+                        onMovieClick
+                    )
                 }
             }
             item(span = { GridItemSpan(maxLineSpan) }) {
