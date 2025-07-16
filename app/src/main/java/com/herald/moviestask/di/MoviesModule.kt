@@ -29,7 +29,7 @@ object MoviesModule {
     fun getHttpClient(@ApplicationContext context: Context): OkHttpClient {
         val certificatePinner = CertificatePinner
             .Builder()
-            .add(Constants.BASE_HOST, "sha256/k1Hdw5sdSn5kh/gemLVSQD/P4i4IBQEY1tW4WNxh9XM=")
+            .add(Constants.BASE_HOST, "sha256/f78NVAesYtdZ9OGSbK7VtGQkSIVykh3DnduuLIJHMu4=")
             .build()
 
         return OkHttpClient.Builder()
